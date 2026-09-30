@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integration Mastery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+    <!-- TensorFlow.js and Handpose for Hand Tracking -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        /* Sci-fi Background Grid */
+        .grid-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(56, 189, 248, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -2;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) scale(3);
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 500px; }
+        }
+
+        .ambient-light {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(14, 165, 233, 0.2) 0%, rgba(15, 23, 42, 1) 70%);
+            z-index: -1;
+        }
+
+        /* Option Buttons */
+        .option-btn {
+            position: relative;
+            background: rgba(30, 41, 59, 0.85);
+            border: 2px solid #38bdf8;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3), inset 0 0 10px rgba(56, 189, 248, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-out;
+            min-height: 90px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Loading Bar for Hand Selection */
+        .hold-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 8px;
+            background: #eab308;
+            width: 0%;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px #eab308;
+        }
+
+        /* Finger Indicators */
+        .finger-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2563eb;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: 2px solid #38bdf8;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .option-btn:hover:not(:disabled), .option-btn.targeting {
+            background: rgba(56, 189, 248, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(56, 189, 248, 0.6);
+            border-color: #eab308;
+        }
+
+        .option-btn.hit-correct {
+            background: rgba(34, 197, 94, 0.9) !important;
+            border-color: #4ade80 !important;
+            box-shadow: 0 0 30px #4ade80 !important;
+            transform: scale(1.05) !important;
+        }
+
+        .option-btn.hit-wrong {
+            background: rgba(239, 68, 68, 0.9) !important;
+            border-color: #f87171 !important;
+            box-shadow: 0 0 30px #f87171 !important;
+            transform: scale(0.95) !important;
+        }
+
+        /* UI Overlays */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            backdrop-filter: blur(5px);
+        }
+
+        .hidden { display: none !important; }
+
+        .btn {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            border: 2px solid #38bdf8;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+            margin-top: 20px;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.6);
+        }
+        .btn:disabled {
+            background: #475569;
+            border-color: #64748b;
+            color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #question-box {
+            background: rgba(30, 41, 59, 0.95);
+            padding: 20px 30px;
+            border-radius: 16px;
+            border: 2px solid #eab308;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(234, 179, 8, 0.2);
+            text-align: center;
+            z-index: 10;
+            min-width: 450px;
+            max-width: 800px;
+        }
+
+        .math-display {
+            font-size: 2rem;
+            color: #eab308;
+            margin-top: 10px;
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: right;
+            z-index: 10;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #cam-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 160px;
+            height: 120px;
+            border: 2px solid #38bdf8;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 50;
+            background: #000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        
+        #webcam {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror image */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background -->
+    <div class="grid-bg"></div>
+    <div class="ambient-light"></div>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden text-sky-400">
+        <div id="level-display">Level: 1/10</div>
+        <div id="score-display" class="text-green-400 mt-2">Score: 0</div>
+    </div>
+
+    <!-- Camera Feed -->
+    <div id="cam-container" class="hidden">
+        <video id="webcam" autoplay playsinline muted></video>
+        <div class="absolute bottom-1 left-1 bg-black bg-opacity-70 text-xs px-2 py-1 rounded text-sky-400" id="detection-status">Searching for hand...</div>
+    </div>
+
+    <!-- Gameplay Area -->
+    <div id="game-container" class="hidden w-full h-full absolute inset-0 flex flex-col items-center justify-center p-4 z-10">
+        
+        <div id="question-box" class="mb-8 mt-4">
+            <h2 class="text-lg text-slate-300 font-bold uppercase tracking-wider">Evaluate the Integral</h2>
+            <div id="question-text" class="math-display"></div>
+        </div>
+
+        <div id="targets-container" class="grid grid-cols-2 gap-x-6 gap-y-8 w-full max-w-4xl">
+            <button class="option-btn" data-index="0">
+                <div class="finger-badge">☝️ 1 Finger</div>
+                <span class="math-opt"></span>
+                <div class="hold-progress" id="prog-0"></div>
+            </button>
+            <button class="option-btn" data-index="1">
+                <div class="finger-badge">✌️ 2 Fingers</div>
+                <span class="math-opt"></span>
+                <div class="hold-progress" id="prog-1"></div>
+            </button>
+            <button class="option-btn" data-index="2">
+                <div class="finger-badge">🤟 3 Fingers</div>
+                <span class="math-opt"></span>
+                <div class="hold-progress" id="prog-2"></div>
+            </button>
+            <button class="option-btn" data-index="3">
+                <div class="finger-badge">🖐️ 4 Fingers</div>
+                <span class="math-opt"></span>
+                <div class="hold-progress" id="prog-3"></div>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Screens -->
+    <div id="start-screen" class="overlay">
+        <h1 class="text-6xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600 drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]">
+            Integration Mastery
+        </h1>
+        <p class="text-xl mb-2 text-slate-300">Hand-Tracking Edition</p>
+        <div class="bg-slate-800 p-6 rounded-lg border border-slate-600 mt-6 max-w-2xl text-center">
+            <h3 class="text-2xl text-yellow-400 mb-4 font-bold">🎮 How to Play</h3>
+            <ul class="text-lg space-y-3 text-center text-slate-200">
+                <li>Show your hand to the camera.</li>
+                <li>Hold up <strong>1, 2, 3, or 4 fingers</strong> to select an answer.</li>
+                <li>Hold the pose for <strong>1 second</strong> to confirm your shot!</li>
+            </ul>
+        </div>
+        
+        <p id="loading-msg" class="text-yellow-400 font-bold mt-6 text-xl">Loading AI Vision Model... Please wait.</p>
+        <button id="start-btn" class="btn mt-4 hidden">START GAME</button>
+    </div>
+
+    <div id="end-screen" class="overlay hidden">
+        <h1 class="text-6xl font-bold mb-4 text-green-400">Quiz Complete</h1>
+        <h2 class="text-4xl mb-6 text-white">Final Score: <span id="final-score" class="text-yellow-400">0/10</span></h2>
+        
+        <div id="performance-msg" class="text-2xl mb-8 text-slate-300"></div>
+
+        <button id="restart-btn" class="btn">PLAY AGAIN</button>
+    </div>
+
+    <script>
+        // --- Game State ---
+        let currentLevel = 1;
+        const maxLevel = 10;
+        let score = 0;
+        let currentQuestion = null;
+        let isProcessingShot = false;
+
+        // --- Hand Tracking State ---
+        let model = null;
+        let video = document.getElementById('webcam');
+        let currentTargetIndex = -1;
+        let holdStartTime = 0;
+        const HOLD_DURATION_MS = 800; // 0.8 seconds to trigger
+
+        // --- Initialize AI ---
+        async function initAI() {
+            try {
+                // Request camera access
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                
+                // Wait for video to be ready
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => { resolve(); };
+                });
+
+                // Load Handpose
+                model = await handpose.load();
+                
+                document.getElementById('loading-msg').classList.add('hidden');
+                document.getElementById('start-btn').classList.remove('hidden');
+                
+                // Start detection loop
+                detectHand();
+            } catch (err) {
+                document.getElementById('loading-msg').innerText = "Camera Access Denied or Error loading AI. Please allow camera access and refresh.";
+                document.getElementById('loading-msg').classList.remove('text-yellow-400');
+                document.getElementById('loading-msg').classList.add('text-red-500');
+                console.error(err);
+            }
+        }
+
+        async function detectHand() {
+            if (model && video.readyState >= 2 && !isProcessingShot && document.getElementById('game-container').classList.contains('hidden') === false) {
+                const predictions = await model.estimateHands(video);
+                
+                if (predictions.length > 0) {
+                    const hand = predictions[0];
+                    const fingers = countFingers(hand.landmarks);
+                    
+                    document.getElementById('detection-status').innerText = `Detected: ${fingers} fingers`;
+                    document.getElementById('detection-status').classList.replace('text-sky-400', 'text-green-400');
+                    
+                    handleFingerSelection(fingers);
+                } else {
+                    document.getElementById('detection-status').innerText = "Searching for hand...";
+                    document.getElementById('detection-status').classList.replace('text-green-400', 'text-sky-400');
+                    handleFingerSelection(0); // Reset
+                }
+            }
+            requestAnimationFrame(detectHand);
+        }
+
+        function countFingers(landmarks) {
+            let count = 0;
+            // landmarks array mapping:
+            // 0: wrist
+            // 1-4: thumb (ignore for our 1-4 count to increase reliability)
+            // 5-8: index finger
+            // 9-12: middle finger
+            // 13-16: ring finger
+            // 17-20: pinky finger
+
+            // Logic: A finger is "up" if its tip (y-coordinate) is significantly higher (lower value in pixels) 
+            // than its lower joint (pip/mcp).
+            
+            // Index
+            if (landmarks[8][1] < landmarks[6][1] - 15) count++;
+            // Middle
+            if (landmarks[12][1] < landmarks[10][1] - 15) count++;
+            // Ring
+            if (landmarks[16][1] < landmarks[14][1] - 15) count++;
+            // Pinky
+            if (landmarks[20][1] < landmarks[18][1] - 15) count++;
+
+            return count;
+        }
+
+        function handleFingerSelection(fingers) {
+            // Map 1, 2, 3, 4 fingers to index 0, 1, 2, 3
+            let target = -1;
+            if (fingers >= 1 && fingers <= 4) {
+                target = fingers - 1;
+            }
+
+            // If target changed, reset timer
+            if (target !== currentTargetIndex) {
+                currentTargetIndex = target;
+                holdStartTime = Date.now();
+                
+                // Clear all UI states
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.classList.remove('targeting');
+                });
+                document.querySelectorAll('.hold-progress').forEach(prog => {
+                    prog.style.width = '0%';
+                });
+
+                if (target !== -1) {
+                    document.querySelector(`.option-btn[data-index="${target}"]`).classList.add('targeting');
+                }
+            } 
+            // If target is maintained, increase progress bar
+            else if (target !== -1) {
+                const elapsed = Date.now() - holdStartTime;
+                const progress = Math.min((elapsed / HOLD_DURATION_MS) * 100, 100);
+                
+                document.getElementById(`prog-${target}`).style.width = `${progress}%`;
+
+                if (progress >= 100) {
+                    // Trigger selection!
+                    selectOption(target);
+                }
+            }
+        }
+
+
+        // --- Math Helper Engine ---
+        function gcd(a, b) {
+            a = Math.abs(a); b = Math.abs(b);
+            while (b) { let t = b; b = a % b; a = t; }
+            return Math.max(1, a);
+        }
+
+        function fmtFrac(n, d) {
+            if (d < 0) { n = -n; d = -d; }
+            let g = gcd(n, d); n /= g; d /= g;
+            if (d === 1) return n === 1 ? "" : n === -1 ? "-" : n.toString();
+            if (n === 0) return "0";
+            let sign = n < 0 ? "-" : "";
+            return `${sign}\\frac{${Math.abs(n)}}{${d}}`;
+        }
+
+        function fmtTerm(cStr, rest) {
+            if (cStr === "0") return "0";
+            if (cStr === "" && rest !== "") return rest;
+            if (cStr === "-" && rest !== "") return "-" + rest;
+            if (cStr === "" && rest === "") return "1";
+            if (cStr === "-" && rest === "") return "-1";
+            return cStr + rest;
+        }
+
+        const rInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const rNonZero = (min, max) => { let v = 0; while (v === 0) v = rInt(min, max); return v; };
+
+        // Type 1: Algebra Polynomial
+        function genAlgebraPoly() {
+            let a = rNonZero(-6, 6);
+            let b = rNonZero(-3, 3);
+            let c = rNonZero(-5, 5);
+            let n = rInt(2, 5);
+            
+            let qStr = `\\int ${a === 1 ? 'x' : a === -1 ? '-x' : a+'x'} (${b === 1 ? 'x^2' : b === -1 ? '-x^2' : b+'x^2'} ${c > 0 ? '+'+c : c})^${n} \\, dx`;
+            
+            let cC = fmtFrac(a, 2 * b * (n + 1));
+            let base = `(${b === 1 ? 'x^2' : b === -1 ? '-x^2' : b+'x^2'} ${c > 0 ? '+'+c : c})`;
+            let correct = fmtTerm(cC, `${base}^{${n+1}}`);
+            
+            let w1C = fmtFrac(a, 2 * (n + 1));
+            let w1 = fmtTerm(w1C, `${base}^{${n+1}}`);
+            
+            let w2C = fmtFrac(a, 2 * b);
+            let w2 = fmtTerm(w2C, `${base}^{${n}}`);
+            
+            let w3 = fmtTerm((a * 2 * b * (n+1)).toString(), `${base}^{${n+1}}`);
+
+            return { q: qStr, c: correct, w1, w2, w3 };
+        }
+
+        // Type 2: Algebra Root
+        function genAlgebraRoot() {
+            let a = rNonZero(-5, 5);
+            let b = rNonZero(-3, 3);
+            let c = rNonZero(-5, 5);
+            
+            let num = a === 1 ? 'x' : a === -1 ? '-x' : a+'x';
+            let den = `\\sqrt{${b === 1 ? 'x^2' : b === -1 ? '-x^2' : b+'x^2'} ${c > 0 ? '+'+c : c}}`;
+            let qStr = `\\int \\frac{${num}}{${den}} \\, dx`;
+            
+            let cC = fmtFrac(a, b);
+            let correct = fmtTerm(cC, den);
+            
+            let w1C = fmtFrac(a, 2 * b);
+            let w1 = fmtTerm(w1C, den);
+            
+            let w2C = fmtFrac(a, 2 * b);
+            let w2 = fmtTerm(w2C, `\\ln|${den}|`);
+            
+            let w3C = fmtFrac(-a, b);
+            let w3 = fmtTerm(w3C, den);
+
+            return { q: qStr, c: correct, w1, w2, w3 };
+        }
+
+        // Type 3: Natural Exponential
+        function genExponential() {
+            let a = rNonZero(-4, 4);
+            let b = rNonZero(-3, 3);
+            let c = rNonZero(-3, 3);
+            
+            let pwr = `${b === 1 ? 'x^2' : b === -1 ? '-x^2' : b+'x^2'} ${c > 0 ? '+'+c : c}`;
+            let qStr = `\\int ${a === 1 ? 'x' : a === -1 ? '-x' : a+'x'} e^{${pwr}} \\, dx`;
+            
+            let cC = fmtFrac(a, 2 * b);
+            let correct = fmtTerm(cC, `e^{${pwr}}`);
+            
+            let w1C = fmtFrac(a, 2);
+            let w1 = fmtTerm(w1C, `e^{${pwr}}`);
+            
+            let w2C = fmtFrac(a, 2 * b * 2);
+            let w2 = fmtTerm(w2C, `e^{${b}x^4}`);
+            
+            let w3C = fmtFrac(a, 2 * b);
+            let w3 = fmtTerm(w3C, `x e^{${pwr}}`);
+
+            return { q: qStr, c: correct, w1, w2, w3 };
+        }
+
+        // Type 4: Natural Logarithm
+        function genLogarithm() {
+            let a = rNonZero(-5, 5);
+            let n = rInt(1, 3);
+            
+            let qStr = n === 1 
+                ? `\\int \\frac{${a === 1 ? '\\ln x' : a === -1 ? '-\\ln x' : a+'\\ln x'}}{x} \\, dx`
+                : `\\int \\frac{${a === 1 ? '' : a === -1 ? '-' : a}(\\ln x)^${n}}{x} \\, dx`;
+            
+            let cC = fmtFrac(a, n + 1);
+            let correct = fmtTerm(cC, `(\\ln x)^{${n+1}}`);
+            
+            let w1C = fmtFrac(a, n);
+            let w1 = fmtTerm(w1C, `(\\ln x)^{${n}}`);
+            if (n===1) w1 = fmtTerm(a.toString(), `\\ln x`);
+
+            let w2 = fmtTerm(a.toString(), `\\ln(\\ln x)`);
+            let w3 = fmtTerm((a * (n+1)).toString(), `(\\ln x)^{${n+1}}`);
+
+            return { q: qStr, c: correct, w1, w2, w3 };
+        }
+
+        // Type 5: Exp denominator
+        function genExpDenom() {
+            let a = rNonZero(-4, 4);
+            let b = rNonZero(1, 4);
+            let c = rNonZero(-5, 5);
+            
+            let num = a === 1 ? 'e^x' : a === -1 ? '-e^x' : a+'e^x';
+            let den = `${b === 1 ? 'e^x' : b+'e^x'} ${c > 0 ? '+'+c : c}`;
+            let qStr = `\\int \\frac{${num}}{${den}} \\, dx`;
+            
+            let cC = fmtFrac(a, b);
+            let correct = fmtTerm(cC, `\\ln|${den}|`);
+            
+            let w1C = a.toString();
+            let w1 = fmtTerm(w1C, `\\ln|${den}|`);
+            if(b === 1) w1 = fmtTerm(a.toString(), `\\frac{1}{${den}}`);
+            
+            let w2C = fmtFrac(-a, b);
+            let w2 = fmtTerm(w2C, `\\frac{1}{(${den})^2}`);
+            
+            let w3 = fmtTerm(cC, `x \\ln|${c > 0 ? c : -c}|`);
+
+            return { q: qStr, c: correct, w1, w2, w3 };
+        }
+
+        function generateProblemForLevel(lvl) {
+            let prob;
+            if (lvl <= 2) prob = genAlgebraPoly();
+            else if (lvl <= 4) prob = genExponential();
+            else if (lvl <= 6) prob = genLogarithm();
+            else if (lvl <= 8) prob = Math.random() > 0.5 ? genAlgebraRoot() : genExpDenom();
+            else {
+                const rnd = Math.random();
+                if(rnd < 0.3) prob = genAlgebraRoot();
+                else if(rnd < 0.6) prob = genExpDenom();
+                else prob = genAlgebraPoly();
+            }
+
+            let opts = [prob.c + " + C", prob.w1 + " + C", prob.w2 + " + C", prob.w3 + " + C"];
+            opts = [...new Set(opts)];
+            while(opts.length < 4) {
+                 opts.push(fmtTerm(rNonZero(-5,5).toString(), "x^" + rInt(2,4)) + " + C");
+                 opts = [...new Set(opts)];
+            }
+
+            for (let i = opts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [opts[i], opts[j]] = [opts[j], opts[i]];
+            }
+
+            return {
+                question: prob.q,
+                options: opts.slice(0,4),
+                correctIndex: opts.indexOf(prob.c + " + C") !== -1 ? opts.indexOf(prob.c + " + C") : 0
+            };
+        }
+
+        function playSound(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                if (type === 'hit') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(400, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.3);
+                } else {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.4);
+                }
+            } catch(e) {}
+        }
+
+        // Programmatic selection (from hand tracking or click)
+        function selectOption(index) {
+            if (isProcessingShot) return;
+            isProcessingShot = true;
+            currentTargetIndex = -1; // reset tracking
+
+            const allBtns = document.querySelectorAll('.option-btn');
+            const btn = document.querySelector(`.option-btn[data-index="${index}"]`);
+            
+            allBtns.forEach(b => {
+                b.disabled = true;
+                b.classList.remove('targeting');
+            });
+
+            if (index === currentQuestion.correctIndex) {
+                btn.classList.add('hit-correct');
+                score++;
+                playSound('hit');
+            } else {
+                btn.classList.add('hit-wrong');
+                document.querySelector(`.option-btn[data-index="${currentQuestion.correctIndex}"]`).classList.add('hit-correct');
+                playSound('miss');
+            }
+            
+            updateHUD();
+
+            setTimeout(() => {
+                allBtns.forEach(b => {
+                    b.classList.remove('hit-correct', 'hit-wrong');
+                    b.disabled = false;
+                });
+                
+                // reset progress bars
+                document.querySelectorAll('.hold-progress').forEach(prog => {
+                    prog.style.width = '0%';
+                });
+                
+                currentLevel++;
+                if (currentLevel > maxLevel) {
+                    endGame();
+                } else {
+                    loadLevel();
+                }
+            }, 1500);
+        }
+
+        // Also allow clicking for fallback
+        function handleOptionClick(event) {
+            const index = parseInt(event.currentTarget.getAttribute('data-index'));
+            selectOption(index);
+        }
+
+        function updateHUD() {
+            document.getElementById('level-display').innerText = `Level: ${Math.min(currentLevel, maxLevel)}/10`;
+            document.getElementById('score-display').innerText = `Score: ${score}`;
+        }
+
+        function loadLevel() {
+            isProcessingShot = false;
+            currentTargetIndex = -1;
+            
+            currentQuestion = generateProblemForLevel(currentLevel);
+            
+            // Render Math
+            katex.render(currentQuestion.question, document.getElementById('question-text'), {
+                displayMode: true,
+                throwOnError: false
+            });
+            
+            const targets = document.querySelectorAll('.option-btn .math-opt');
+            currentQuestion.options.forEach((opt, idx) => {
+                katex.render(opt, targets[idx], {
+                    displayMode: false,
+                    throwOnError: false
+                });
+            });
+            
+            updateHUD();
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('cam-container').classList.remove('hidden');
+            
+            currentLevel = 1;
+            score = 0;
+            loadLevel();
+            
+            // Restart detection loop in case it stopped
+            requestAnimationFrame(detectHand);
+        }
+
+        function endGame() {
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('cam-container').classList.add('hidden');
+            
+            const endScreen = document.getElementById('end-screen');
+            endScreen.classList.remove('hidden');
+            
+            document.getElementById('final-score').innerText = `${score}/10`;
+            
+            const msgEl = document.getElementById('performance-msg');
+            if (score === 10) msgEl.innerText = "Perfect! You are an Integration Master!";
+            else if (score >= 7) msgEl.innerText = "Great job! Your substitution skills are sharp.";
+            else if (score >= 4) msgEl.innerText = "Good effort. Keep practicing your u-substitutions!";
+            else msgEl.innerText = "Calculus is tough! Review your derivatives and try again.";
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('start-btn').addEventListener('click', startGame);
+        document.getElementById('restart-btn').addEventListener('click', startGame);
+        
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.addEventListener('click', handleOptionClick);
+        });
+
+        // Initialize AI on page load
+        initAI();
+
+    </script>
+</body>
+</html>
