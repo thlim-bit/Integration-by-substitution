@@ -8,7 +8,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- KaTeX for crisp LaTeX math rendering -->
+    <!-- KaTeX for math rendering -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
 
@@ -21,70 +21,75 @@
             color: #f1f5f9;
             font-family: 'Rajdhani', sans-serif;
             overflow-x: hidden;
+            min-height: 100vh;
         }
 
         .title-font {
             font-family: 'Orbitron', sans-serif;
         }
 
-        /* Anime Cyber-Grid Background */
         .cyber-grid {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             background-image: 
-                linear-gradient(to right, rgba(236, 72, 153, 0.1) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(56, 189, 248, 0.1) 1px, transparent 1px);
-            background-size: 40px 40px;
+                linear-gradient(to right, rgba(236, 72, 153, 0.08) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(56, 189, 248, 0.08) 1px, transparent 1px);
+            background-size: 36px 36px;
             z-index: -2;
         }
 
         .glow-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle at 50% 20%, rgba(168, 85, 247, 0.15) 0%, rgba(11, 15, 25, 0.95) 75%);
+            background: radial-gradient(circle at 50% 20%, rgba(168, 85, 247, 0.18) 0%, rgba(11, 15, 25, 0.95) 75%);
             z-index: -1;
         }
 
-        /* Drag & Drop Cards */
         .draggable-card {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
-            border: 2px solid rgba(56, 189, 248, 0.5);
-            border-radius: 8px;
-            padding: 10px;
-            cursor: grab;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        }
-        .draggable-card:active {
-            cursor: grabbing;
-            transform: scale(1.02);
-            border-color: #ec4899;
-            box-shadow: 0 0 15px rgba(236, 72, 153, 0.6);
-        }
-        .draggable-card.dragging {
-            opacity: 0.4;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            border: 2px solid rgba(56, 189, 248, 0.4);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            user-select: none;
+            touch-action: manipulation;
         }
 
-        /* Target Drop Zones */
+        .draggable-card:hover {
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(56, 189, 248, 0.3);
+        }
+
+        .draggable-card.selected-card {
+            border-color: #ec4899;
+            box-shadow: 0 0 18px rgba(236, 72, 153, 0.8);
+            transform: scale(1.03);
+            background: linear-gradient(135deg, rgba(55, 30, 65, 0.95), rgba(20, 15, 35, 0.95));
+        }
+
         .drop-zone {
-            min-height: 60px;
-            border: 2px dashed rgba(168, 85, 247, 0.5);
-            border-radius: 8px;
+            min-height: 64px;
+            border: 2px dashed rgba(168, 85, 247, 0.4);
+            border-radius: 10px;
             background: rgba(15, 23, 42, 0.6);
             transition: all 0.2s ease;
         }
+
         .drop-zone.drag-over {
             border-color: #38bdf8;
             background: rgba(56, 189, 248, 0.15);
-            box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.3);
+            box-shadow: inset 0 0 12px rgba(56, 189, 248, 0.4);
         }
+
         .drop-zone.filled {
             border-style: solid;
             border-color: #10b981;
-            background: rgba(16, 185, 129, 0.05);
+            background: rgba(16, 185, 129, 0.08);
         }
 
-        /* Anime Button Effects */
         .cyber-btn {
             background: linear-gradient(90deg, #ec4899, #8b5cf6);
             border: none;
@@ -96,6 +101,7 @@
             box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
             transition: all 0.2s ease;
         }
+
         .cyber-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 0 25px rgba(236, 72, 153, 0.8);
@@ -106,14 +112,15 @@
             border: 2px solid #8b5cf6;
             color: #38bdf8;
             font-weight: bold;
-            border-radius: 6px;
-            padding: 6px 12px;
+            border-radius: 8px;
+            padding: 8px 12px;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
+
         .math-input:focus {
             border-color: #ec4899;
-            box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+            box-shadow: 0 0 12px rgba(236, 72, 153, 0.5);
         }
     </style>
 </head>
@@ -122,88 +129,64 @@
     <div class="cyber-grid"></div>
     <div class="glow-overlay"></div>
 
-    <!-- Header / HUD -->
     <header class="p-4 border-b border-purple-800/50 bg-slate-900/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-50">
         <div class="flex items-center space-x-3">
-            <span class="text-3xl">⛩️</span>
+            <span class="text-3xl">⚔</span>
             <div>
                 <h1 class="title-font text-xl md:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-400 to-sky-400">
-                    INTEGRATION ACADEMY
+                    ANIME MATH ACADEMY
                 </h1>
-                <p class="text-xs text-sky-400 tracking-wider">u-Substitution Arc</p>
+                <p class="text-xs text-sky-400 tracking-wider">u-Substitution Mastery Arc</p>
             </div>
         </div>
 
-        <div id="hud" class="hidden flex items-center space-x-6 text-lg font-bold">
-            <div class="bg-slate-800/90 px-4 py-1.5 rounded-lg border border-pink-500/40 text-pink-400">
+        <div id="hud" class="hidden flex items-center space-x-4 md:space-x-6 text-sm md:text-lg font-bold">
+            <div class="bg-slate-800/90 px-3 py-1.5 rounded-lg border border-pink-500/40 text-pink-400">
                 Stage: <span id="stage-num" class="text-white">1</span>/6
             </div>
-            <div class="bg-slate-800/90 px-4 py-1.5 rounded-lg border border-sky-500/40 text-sky-400">
+            <div class="bg-slate-800/90 px-3 py-1.5 rounded-lg border border-sky-500/40 text-sky-400">
                 Score: <span id="current-score" class="text-yellow-400">0</span> / 30
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="container mx-auto px-4 py-6 max-w-5xl flex-grow">
+    <main class="container mx-auto px-4 py-6 max-w-5xl flex-grow flex flex-col justify-center">
 
-        <!-- START SCREEN -->
-        <div id="start-screen" class="flex flex-col items-center justify-center text-center py-12 space-y-6">
+        <div id="start-screen" class="flex flex-col items-center justify-center text-center py-8 space-y-6">
             <div class="relative">
-                <div class="text-7xl mb-2">⚡</div>
-                <h2 class="title-font text-4xl md:text-5xl font-black text-white drop-shadow-[0_0_20px_rgba(236,72,153,0.6)]">
-                    U-SUBSTITUTION MASTERY
+                <div class="text-6xl md:text-7xl mb-3 animate-bounce">⚡</div>
+                <h2 class="title-font text-3xl md:text-5xl font-black text-white drop-shadow-[0_0_20px_rgba(236,72,153,0.6)]">
+                    INTEGRATION BY SUBSTITUTION
                 </h2>
-                <p class="text-slate-300 text-lg max-w-xl mx-auto mt-2">
-                    Master integration techniques through drag-and-drop step assembly!
+                <p class="text-slate-300 text-base md:text-lg max-w-xl mx-auto mt-2">
+                    Assemble pure mathematical steps using Drag-and-Drop or Tap-to-Place mechanics!
                 </p>
             </div>
 
-            <div class="bg-slate-900/90 border border-purple-500/30 p-6 rounded-xl max-w-2xl text-left space-y-3 shadow-2xl">
-                <h3 class="title-font text-pink-400 text-lg font-bold border-b border-purple-800 pb-2">📜 Exam Guidelines:</h3>
+            <div class="bg-slate-900/90 border border-purple-500/40 p-6 rounded-2xl max-w-2xl text-left space-y-3 shadow-2xl backdrop-blur-sm">
+                <h3 class="title-font text-pink-400 text-lg font-bold border-b border-purple-800 pb-2">📜 Game Rules & Marking:</h3>
                 <ul class="list-disc list-inside text-slate-300 space-y-2 text-sm md:text-base">
-                    <li><strong class="text-sky-400">Questions 1–2:</strong> Algebraic Integrals (5 steps, 5 Marks each).</li>
-                    <li><strong class="text-sky-400">Questions 3–4:</strong> Exponential & Logarithmic Integrals (5 steps, 5 Marks each).</li>
-                    <li><strong class="text-sky-400">Questions 5–6:</strong> Definite Integrals with bounds (7 steps, 5 Marks each).</li>
-                    <li>For Definite Integrals, you must manually calculate and enter the <span class="text-yellow-400">new upper/lower u-limits</span> and the <span class="text-yellow-400">final evaluated result</span>.</li>
+                    <li><strong class="text-sky-400">6 Interactive Stages:</strong> Polynomial, Radical, Exponential, Logarithmic, and Definite Integrals.</li>
+                    <li><strong class="text-sky-400">Comprehensive Steps:</strong> 6 to 7 detailed mathematical steps per problem to build complete mastery.</li>
+                    <li><strong class="text-yellow-400">Calculator-Based Definite Answers:</strong> Definite integral stages conclude with exact procedures followed by evaluated numerical values!</li>
+                    <li><strong class="text-pink-400">Detailed Feedback:</strong> Receive step-by-step explanations for each choice after every stage to learn from mistakes.</li>
                 </ul>
             </div>
 
-            <button id="start-btn" class="cyber-btn px-10 py-4 rounded-xl text-xl mt-4">
-                ENTER THE INTEGRATION ARENA
+            <button id="start-btn" class="cyber-btn px-10 py-4 rounded-xl text-lg md:text-xl mt-4 cursor-pointer">
+                START INTEGRATION BATTLE
             </button>
         </div>
 
-        <!-- GAMEPLAY AREA -->
         <div id="game-screen" class="hidden space-y-6">
 
-            <!-- Question Card -->
             <div class="bg-slate-900/90 border-2 border-purple-500/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-pink-600 text-xs font-bold px-3 py-1 rounded-bl-lg tracking-wider uppercase" id="q-type-badge">
                     Indefinite Integral
                 </div>
 
-                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1" id="q-number-title">Question 1</h3>
-                <div id="question-text" class="text-2xl md:text-3xl text-center py-4 text-yellow-300 overflow-x-auto"></div>
-
-                <!-- Limits Input Box for Q5 & Q6 -->
-                <div id="limits-input-container" class="hidden mt-4 border-t border-slate-700/80 pt-4 bg-slate-800/40 p-4 rounded-xl space-y-3">
-                    <p class="text-sm font-bold text-purple-300 uppercase tracking-wider">⚡ Step 1: Limit Transformation & Evaluation Requirements</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">New Lower Limit ($u_{a}$):</label>
-                            <input type="text" id="input-lower-limit" class="math-input w-full" placeholder="e.g. 1">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">New Upper Limit ($u_{b}$):</label>
-                            <input type="text" id="input-upper-limit" class="math-input w-full" placeholder="e.g. 4">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Final Exact Value:</label>
-                            <input type="text" id="input-final-value" class="math-input w-full" placeholder="e.g. 7/3">
-                        </div>
-                    </div>
-                </div>
+                <h3 class="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-widest mb-1" id="q-number-title">Question 1</h3>
+                <div id="question-text" class="text-lg md:text-2xl text-center py-2 md:py-3 text-yellow-300 overflow-x-auto min-h-[50px] flex items-center justify-center"></div>
             </div>
 
             <!-- Drag and Drop Workspace Grid -->
@@ -212,22 +195,23 @@
                 <!-- Left Column: Empty Steps (Target Slots) -->
                 <div class="lg:col-span-7 space-y-3">
                     <h4 class="title-font text-sm font-bold text-sky-400 uppercase tracking-wider flex items-center justify-between">
-                        <span>🎯 Drop Correct Solution Steps Here</span>
-                        <span class="text-xs text-slate-400 font-normal">Order Matters</span>
+                        <span>🎯 Solution Slots (In Order)</span>
+                        <span class="text-xs text-slate-400 font-normal">Tap or Drag cards into slots</span>
                     </h4>
                     
                     <div id="steps-target-container" class="space-y-3">
-                        <!-- Dynamic Drop Zones Rendered Here -->
+                        <!-- Dynamic Drop Zones -->
                     </div>
                 </div>
 
                 <!-- Right Column: Step Options Bank -->
                 <div class="lg:col-span-5 space-y-3">
-                    <h4 class="title-font text-sm font-bold text-pink-400 uppercase tracking-wider">
-                        📦 Step Options Bank
+                    <h4 class="title-font text-sm font-bold text-pink-400 uppercase tracking-wider flex justify-between items-center">
+                        <span>📦 Options Bank</span>
+                        <span id="active-step-badge" class="text-xs bg-pink-500/20 text-pink-300 px-2.5 py-0.5 rounded-full border border-pink-500/40">Step 1 Choices (1 Correct)</span>
                     </h4>
-                    <div id="options-bank" class="bg-slate-900/80 border border-slate-700 p-4 rounded-xl space-y-3 min-h-[300px]">
-                        <!-- Dynamic Options Draggables Rendered Here -->
+                    <div id="options-bank" class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-xl space-y-3 min-h-[280px] flex flex-col justify-center">
+                        <!-- Dynamic 3 Options per step -->
                     </div>
                 </div>
 
@@ -235,22 +219,44 @@
 
             <!-- Control & Feedback Panel -->
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-800">
-                <div id="feedback-message" class="text-base font-bold min-h-[24px]"></div>
-                <button id="submit-step-btn" class="cyber-btn px-8 py-3 rounded-lg text-lg w-full md:w-auto">
-                    SUBMIT ANSWER & AUTO-MARK
+                <div id="feedback-message" class="text-base font-bold min-h-[28px]"></div>
+                <button id="submit-step-btn" class="cyber-btn px-8 py-3 rounded-xl text-lg w-full md:w-auto cursor-pointer">
+                    SUBMIT & AUTO-GRADE STAGE
                 </button>
             </div>
 
         </div>
 
-        <!-- END SUMMARY SCREEN -->
-        <div id="end-screen" class="hidden flex flex-col items-center justify-center text-center py-12 space-y-6">
+        <!-- Detailed Feedback Review Modal -->
+        <div id="feedback-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+            <div class="bg-slate-900 border-2 border-purple-500 rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                <div class="p-4 border-b border-purple-800/60 bg-slate-800/80 flex justify-between items-center">
+                    <div>
+                        <h3 class="title-font text-xl text-pink-400 font-bold" id="modal-stage-title">Stage 1 Review & Feedback</h3>
+                        <p class="text-xs text-sky-300" id="modal-score-subtitle">Score: 5 / 5 Marks</p>
+                    </div>
+                    <span class="text-2xl">🎓</span>
+                </div>
+                
+                <div class="p-6 overflow-y-auto space-y-4 flex-grow" id="modal-steps-feedback">
+                    <!-- Dynamic step feedback entries -->
+                </div>
+
+                <div class="p-4 border-t border-purple-800/60 bg-slate-800/80 flex justify-end">
+                    <button id="next-stage-btn" class="cyber-btn px-6 py-2.5 rounded-lg text-sm md:text-base cursor-pointer">
+                        CONTINUE TO NEXT STAGE ➔
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="end-screen" class="hidden flex flex-col items-center justify-center text-center py-8 space-y-6">
             <div class="text-7xl">🏆</div>
-            <h2 class="title-font text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-400">
-                MISSION ACCOMPLISHED!
+            <h2 class="title-font text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-400">
+                STAGE COMPLETED!
             </h2>
 
-            <div class="bg-slate-900/90 border-2 border-purple-500/50 p-8 rounded-2xl max-w-lg w-full space-y-4 shadow-2xl">
+            <div class="bg-slate-900/90 border-2 border-purple-500/50 p-8 rounded-2xl max-w-lg w-full space-y-4 shadow-2xl backdrop-blur-sm">
                 <h3 class="text-xl text-slate-300 font-bold">Final Exam Result</h3>
                 <div class="text-6xl font-black text-yellow-400 my-2" id="final-score-display">
                     0 / 30
@@ -258,29 +264,62 @@
                 <div id="final-eval-text" class="text-lg text-sky-300 font-semibold"></div>
             </div>
 
-            <button id="restart-btn" class="cyber-btn px-10 py-4 rounded-xl text-xl mt-4">
-                RESTART QUIZ
+            <button id="restart-btn" class="cyber-btn px-10 py-4 rounded-xl text-xl mt-4 cursor-pointer">
+                RETRY INTEGRATION BATTLE
             </button>
         </div>
 
     </main>
 
-    <!-- Footer -->
-    <footer class="p-4 text-center text-xs text-slate-500 border-t border-slate-800/80">
-        Integration Mastery Game • Anime Edition • Powered by KaTeX Math Engine
-    </footer>
-
     <script>
-        // --- GAME STATE ---
         let currentQuestionIdx = 0;
         let totalScore = 0;
         let questionsData = [];
         let userAssignedSteps = {}; // slotIndex -> cardId
-        let activeOptions = [];
+        let perStepOptionsBank = {}; // stepIdx -> array of option objects
+        let selectedOptionId = null;
 
-        // --- MATH HELPERS & GENERATORS ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'select') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'drop') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+            } else if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(180, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
         const rInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const rNonZero = (min, max) => { let v = 0; while (v === 0) v = rInt(min, max); return v; };
 
         function gcd(a, b) {
             a = Math.abs(a); b = Math.abs(b);
@@ -301,438 +340,616 @@
             return `\\frac{${num}}{${den}}`;
         }
 
-        // --- QUESTION GENERATOR ENGINE ---
+        function fmtCoeff(a) {
+            if (a === 1) return "";
+            if (a === -1) return "-";
+            return `${a}`;
+        }
+
         function generateQuestions() {
-            const list = [];
-
-            // Q1: Algebraic Polynomial/Power Rule
-            list.push(createAlgebraicPolyQuestion(false, 1));
-            // Q2: Algebraic Square Root / Reciprocal
-            list.push(createAlgebraicRootQuestion(false, 2));
-            // Q3: Natural Exponential
-            list.push(createExpQuestion(false, 3));
-            // Q4: Natural Logarithmic
-            list.push(createLogQuestion(false, 4));
-            // Q5: Definite Algebra/Root Question
-            list.push(createAlgebraicRootQuestion(true, 5));
-            // Q6: Definite Exponential/Log Question
-            list.push(createExpQuestion(true, 6));
-
-            return list;
+            return [
+                createPolyQuestion(1),
+                createRootQuestion(2),
+                createExpQuestion(3),
+                createLogQuestion(4),
+                createDefPolyQuestion(5),
+                createDefExpQuestion(6)
+            ];
         }
 
-        // --- GENERATOR: ALGEBRA POLYNOMIAL ---
-        function createAlgebraicPolyQuestion(isDefinite, qNum) {
-            let a = rNonZero(1, 4);
-            let b = rNonZero(1, 3);
+        // --- STAGE 1: INDEFINITE POLYNOMIAL INTEGRAL (6 STEPS) ---
+        function createPolyQuestion(qNum) {
+            let a = rInt(1, 3);
+            let b = rInt(1, 4);
             let n = rInt(2, 3);
-            
             let uExpr = `x^2 + ${b}`;
-            let duExpr = `2x \\, dx`;
             let qTex = `\\int ${2*a}x (${uExpr})^${n} \\, dx`;
-            
-            let step1 = `\\text{Let } u = ${uExpr}`;
-            let step2 = `\\frac{du}{dx} = 2x \\implies dx = \\frac{du}{2x}`;
-            let step3 = `\\int ${2*a}x \\cdot u^${n} \\cdot \\frac{du}{2x} = ${a} \\int u^${n} \\, du`;
-            let step4 = `= ${a} \\cdot \\frac{u^{${n+1}}}{${n+1}} + C`;
-            let step5 = `= ${fmtFrac(a, n+1)} (${uExpr})^{${n+1}} + C`;
 
-            let steps = [step1, step2, step3, step4, step5];
+            let step1 = `\\text{Choose substitution: Let } u = ${uExpr}`;
+            let step2 = `\\text{Differentiate with respect to } x: \\frac{du}{dx} = 2x`;
+            let step3 = `\\text{Express } dx \\text{ in terms of } du: dx = \\frac{du}{2x}`;
+            let step4 = a === 1 
+                ? `\\text{Substitute } u \\text{ and } dx: \\int 2x \\cdot u^${n} \\cdot \\frac{du}{2x}`
+                : `\\text{Substitute } u \\text{ and } dx: \\int ${2*a}x \\cdot u^${n} \\cdot \\frac{du}{2x}`;
+            let step5 = a === 1
+                ? `\\text{Simplify and integrate in } u: \\int u^${n} \\, du = \\frac{u^{${n+1}}}{${n+1}} + C`
+                : `\\text{Simplify and integrate in } u: ${a} \\int u^${n} \\, du = ${a} \\cdot \\frac{u^{${n+1}}}{${n+1}} + C`;
+            let step6 = `\\text{Substitute back } u = ${uExpr}: = ${fmtFrac(a, n+1)} (${uExpr})^{${n+1}} + C`;
 
-            if (!isDefinite) {
-                return {
-                    id: qNum,
-                    isDefinite: false,
-                    title: `Question ${qNum}: Algebraic Substitution`,
-                    questionTex: qTex,
-                    steps: steps,
-                    marks: 5
-                };
-            } else {
-                let xA = 0, xB = 1;
-                let uA = xA*xA + b;
-                let uB = xB*xB + b;
-                let valA = a * Math.pow(uA, n+1) / (n+1);
-                let valB = a * Math.pow(uB, n+1) / (n+1);
-                let exactFrac = simplifyFrac(a * (Math.pow(uB, n+1) - Math.pow(uA, n+1)), n+1);
-                let valStr = exactFrac[1] === 1 ? `${exactFrac[0]}` : `${exactFrac[0]}/${exactFrac[1]}`;
+            let steps = [step1, step2, step3, step4, step5, step6];
 
-                let defQTex = `\\int_{${xA}}^{${xB}} ${2*a}x (${uExpr})^${n} \\, dx`;
-                let step6 = `\\text{Change limits: } x=${xA} \\Rightarrow u=${uA}, \\; x=${xB} \\Rightarrow u=${uB}`;
-                let step7 = `= \\left[ ${fmtFrac(a, n+1)} u^{${n+1}} \\right]_{${uA}}^{${uB}} = ${valStr}`;
+            let explanations = [
+                `Choose the inner polynomial $u = ${uExpr}$ so its derivative $2x$ cancels the outer factor $x$.`,
+                `The derivative of $x^2 + ${b}$ is $\\frac{du}{dx} = 2x$.`,
+                `Rearranging gives $dx = \\frac{du}{2x}$ for direct substitution.`,
+                `Substituting $u$ and $dx$ allows the $2x$ factors to cancel cleanly.`,
+                `Apply the power rule $\\int u^n du = \\frac{u^{n+1}}{n+1} + C$.`,
+                `Replace $u$ with the original variable $x^2 + ${b}$ and attach constant $C$.`
+            ];
 
-                return {
-                    id: qNum,
-                    isDefinite: true,
-                    title: `Question ${qNum}: Definite Algebraic Integration`,
-                    questionTex: defQTex,
-                    steps: [...steps.slice(0,4), step6, step7, `= ${valStr}`],
-                    lowerLimit: `${uA}`,
-                    upperLimit: `${uB}`,
-                    finalValue: valStr,
-                    marks: 5
-                };
-            }
+            let distractors = [
+                [ `\\text{Choose substitution: Let } u = 2x`, `\\text{Choose substitution: Let } u = (${uExpr})^${n}` ],
+                [ `\\text{Differentiate with respect to } x: \\frac{du}{dx} = x`, `\\text{Differentiate with respect to } x: \\frac{du}{dx} = 2` ],
+                [ `\\text{Express } dx \\text{ in terms of } du: dx = 2x \\, du`, `\\text{Express } dx \\text{ in terms of } du: dx = \\frac{du}{x}` ],
+                [ `\\text{Substitute } u \\text{ and } dx: \\int u^${n} \\cdot 2x \\, du`, `\\text{Substitute } u \\text{ and } dx: \\int ${2*a}x \\cdot u^${n} \\cdot 2x \\, du` ],
+                [ `\\text{Simplify and integrate in } u: \\int u^${n} \\, du = u^{${n+1}} + C`, `\\text{Simplify and integrate in } u: \\int u^${n} \\, du = \\frac{u^${n}}{${n}} + C` ],
+                [ `\\text{Substitute back } u = ${uExpr}: = ${fmtFrac(a, n+1)} (${uExpr})^{${n+1}}`, `\\text{Substitute back } u = ${uExpr}: = ${fmtFrac(a, n)} (${uExpr})^{${n}} + C` ]
+            ];
+
+            return { id: qNum, isDefinite: false, title: `Stage ${qNum}: Polynomial Substitution`, questionTex: qTex, steps: steps, explanations: explanations, distractors: distractors };
         }
 
-        // --- GENERATOR: ALGEBRAIC ROOT ---
-        function createAlgebraicRootQuestion(isDefinite, qNum) {
-            let k = rInt(1, 4);
-            let uExpr = `x^2 + ${k}`;
-            let qTex = `\\int \\frac{2x}{\\sqrt{${uExpr}}} \\, dx`;
+        // --- STAGE 2: INDEFINITE RADICAL INTEGRAL (6 STEPS) ---
+        function createRootQuestion(qNum) {
+            let a = rInt(1, 2);
+            let b = rInt(1, 5);
+            let uExpr = `x^3 + ${b}`;
+            let qTex = `\\int ${3*a}x^2 \\sqrt{${uExpr}} \\, dx`;
 
-            let step1 = `\\text{Let } u = ${uExpr}`;
-            let step2 = `du = 2x \\, dx \\implies dx = \\frac{du}{2x}`;
-            let step3 = `\\int \\frac{2x}{\\sqrt{u}} \\cdot \\frac{du}{2x} = \\int u^{-1/2} \\, du`;
-            let step4 = `= \\frac{u^{1/2}}{1/2} + C = 2\\sqrt{u} + C`;
-            let step5 = `= 2\\sqrt{${uExpr}} + C`;
+            let step1 = `\\text{Choose substitution: Let } u = ${uExpr}`;
+            let step2 = `\\text{Differentiate: } du = 3x^2 \\, dx`;
+            let step3 = `\\text{Isolate } dx: dx = \\frac{du}{3x^2}`;
+            let step4 = a === 1
+                ? `\\text{Substitute into integral: } \\int 3x^2 \\cdot u^{1/2} \\cdot \\frac{du}{3x^2}`
+                : `\\text{Substitute into integral: } \\int ${3*a}x^2 \\cdot u^{1/2} \\cdot \\frac{du}{3x^2}`;
+            let step5 = a === 1
+                ? `\\text{Integrate fractional power in } u: \\int u^{1/2} \\, du = \\frac{2}{3} u^{3/2} + C`
+                : `\\text{Integrate fractional power in } u: ${a} \\int u^{1/2} \\, du = ${a} \\cdot \\frac{2}{3} u^{3/2} + C`;
+            let step6 = `\\text{Back-substitute } u: = ${fmtFrac(2*a, 3)} (${uExpr})^{3/2} + C`;
 
-            let steps = [step1, step2, step3, step4, step5];
+            let steps = [step1, step2, step3, step4, step5, step6];
 
-            if (!isDefinite) {
-                return {
-                    id: qNum,
-                    isDefinite: false,
-                    title: `Question ${qNum}: Root & Reciprocal Substitution`,
-                    questionTex: qTex,
-                    steps: steps,
-                    marks: 5
-                };
-            } else {
-                let xA = 0, xB = 2;
-                let uA = xA*xA + k;
-                let uB = xB*xB + k;
-                let finalVal = (2 * Math.sqrt(uB) - 2 * Math.sqrt(uA)).toFixed(2);
+            let explanations = [
+                `Set $u = ${uExpr}$ to simplify the expression under the radical $\\sqrt{u} = u^{1/2}$.`,
+                `Differentiating $x^3 + ${b}$ yields $du = 3x^2 dx$.`,
+                `Isolating $dx$ gives $dx = \\frac{du}{3x^2}$.`,
+                `Substitute $u$ and $dx$; $3x^2$ cancels out.`,
+                `Integrate $u^{1/2}$ using $\\int u^{1/2} du = \\frac{u^{3/2}}{3/2} = \\frac{2}{3}u^{3/2} + C$.`,
+                `Substitute back $u = ${uExpr}$ to complete the antiderivative.`
+            ];
 
-                let defQTex = `\\int_{${xA}}^{${xB}} \\frac{2x}{\\sqrt{${uExpr}}} \\, dx`;
-                let step6 = `\\text{Limits: } u(${xA}) = ${uA}, \\; u(${xB}) = ${uB}`;
-                let step7 = `= \\left[ 2\\sqrt{u} \\right]_{${uA}}^{${uB}} = 2\\sqrt{${uB}} - 2\\sqrt{${uA}}`;
+            let distractors = [
+                [ `\\text{Choose substitution: Let } u = \\sqrt{${uExpr}}`, `\\text{Choose substitution: Let } u = 3x^2` ],
+                [ `\\text{Differentiate: } du = x^2 \\, dx`, `\\text{Differentiate: } du = 6x \\, dx` ],
+                [ `\\text{Isolate } dx: dx = 3x^2 \\, du`, `\\text{Isolate } dx: dx = \\frac{du}{x^2}` ],
+                [ `\\text{Substitute into integral: } \\int 3x^2 \\cdot u \\cdot \\frac{du}{3x^2}`, `\\text{Substitute into integral: } \\int u^{1/2} \\cdot 3x^2 \\, du` ],
+                [ `\\text{Integrate fractional power in } u: = ${a} \\cdot \\frac{1}{2} u^{1/2} + C`, `\\text{Integrate fractional power in } u: = ${a} \\cdot \\frac{3}{2} u^{3/2} + C` ],
+                [ `\\text{Back-substitute } u: = ${fmtFrac(2*a, 3)} (${uExpr})^{3/2}`, `\\text{Back-substitute } u: = ${fmtFrac(a, 3)} \\sqrt{${uExpr}} + C` ]
+            ];
 
-                return {
-                    id: qNum,
-                    isDefinite: true,
-                    title: `Question ${qNum}: Definite Root Substitution`,
-                    questionTex: defQTex,
-                    steps: [...steps.slice(0,4), step6, step7, `= ${finalVal}`],
-                    lowerLimit: `${uA}`,
-                    upperLimit: `${uB}`,
-                    finalValue: `${finalVal}`,
-                    marks: 5
-                };
-            }
+            return { id: qNum, isDefinite: false, title: `Stage ${qNum}: Radical Substitution`, questionTex: qTex, steps: steps, explanations: explanations, distractors: distractors };
         }
 
-        // --- GENERATOR: EXPONENTIAL ---
-        function createExpQuestion(isDefinite, qNum) {
-            let a = rInt(2, 4);
-            let uExpr = `x^${a}`;
-            let qTex = `\\int x^{${a-1}} e^{${uExpr}} \\, dx`;
+        // --- STAGE 3: INDEFINITE EXPONENTIAL INTEGRAL (6 STEPS) ---
+        function createExpQuestion(qNum) {
+            let a = rInt(1, 3);
+            let b = rInt(1, 3);
+            let uExpr = `x^2 + ${b}`;
+            let qTex = `\\int ${2*a}x e^{${uExpr}} \\, dx`;
 
-            let step1 = `\\text{Let } u = ${uExpr}`;
-            let step2 = `du = ${a}x^{${a-1}} \\, dx \\implies x^{${a-1}} dx = \\frac{du}{${a}}`;
-            let step3 = `\\int e^u \\cdot \\frac{du}{${a}} = \\frac{1}{${a}} \\int e^u \\, du`;
-            let step4 = `= \\frac{1}{${a}} e^u + C`;
-            let step5 = `= \\frac{1}{${a}} e^{${uExpr}} + C`;
+            let step1 = `\\text{Let exponent be substitution: } u = ${uExpr}`;
+            let step2 = `\\text{Find differential: } du = 2x \\, dx`;
+            let step3 = `\\text{Solve for } dx: dx = \\frac{du}{2x}`;
+            let step4 = a === 1
+                ? `\\text{Substitute into integrand: } \\int 2x e^u \\cdot \\frac{du}{2x}`
+                : `\\text{Substitute into integrand: } \\int ${2*a}x e^u \\cdot \\frac{du}{2x}`;
+            let step5 = a === 1 ? `\\text{Evaluate } \\int e^u du: = e^u + C` : `\\text{Evaluate } ${a} \\int e^u du: = ${a} e^u + C`;
+            let step6 = a === 1 ? `\\text{Return to variable } x: = e^{${uExpr}} + C` : `\\text{Return to variable } x: = ${a} e^{${uExpr}} + C`;
 
-            let steps = [step1, step2, step3, step4, step5];
+            let steps = [step1, step2, step3, step4, step5, step6];
 
-            if (!isDefinite) {
-                return {
-                    id: qNum,
-                    isDefinite: false,
-                    title: `Question ${qNum}: Exponential Substitution`,
-                    questionTex: qTex,
-                    steps: steps,
-                    marks: 5
-                };
-            } else {
-                let xA = 0, xB = 1;
-                let uA = Math.pow(xA, a);
-                let uB = Math.pow(xB, a);
-                let valStr = `(e-1)/${a}`;
+            let explanations = [
+                `Choose the exponent $u = ${uExpr}$ so the derivative produces the factor $2x$.`,
+                `The differential is $du = 2x dx$.`,
+                `Express $dx$ as $\\frac{du}{2x}$.`,
+                `Substitute $u$ and $dx$; $2x$ cancels out.`,
+                `The integral of $e^u$ with respect to $u$ is simply $e^u + C$.`,
+                `Replace $u$ with $x^2 + ${b}$.`
+            ];
 
-                let defQTex = `\\int_{${xA}}^{${xB}} x^{${a-1}} e^{${uExpr}} \\, dx`;
-                let step6 = `\\text{Transform Bounds: } x=${xA} \\Rightarrow u=${uA}, \\; x=${xB} \\Rightarrow u=${uB}`;
-                let step7 = `= \\left[ \\frac{1}{${a}} e^u \\right]_{${uA}}^{${uB}} = \\frac{e - 1}{${a}}`;
+            let distractors = [
+                [ `\\text{Let exponent be substitution: } u = e^{${uExpr}}`, `\\text{Let exponent be substitution: } u = 2x` ],
+                [ `\\text{Find differential: } du = e^{${uExpr}} dx`, `\\text{Find differential: } du = x \\, dx` ],
+                [ `\\text{Solve for } dx: dx = 2x \\, du`, `\\text{Solve for } dx: dx = \\frac{du}{x}` ],
+                [ `\\text{Substitute into integrand: } \\int e^u \\cdot 2x \\, du`, `\\text{Substitute into integrand: } \\int ${2*a}x e^u \\, du` ],
+                [ `\\text{Evaluate: } = \\frac{${fmtCoeff(a)}}{2} e^u + C`, `\\text{Evaluate: } = ${a} u e^u + C` ],
+                [ `\\text{Return to variable } x: = ${a === 1 ? "" : a} e^{${uExpr}}`, `\\text{Return to variable } x: = ${a === 1 ? "" : a} e^{x^2} + C` ]
+            ];
 
-                return {
-                    id: qNum,
-                    isDefinite: true,
-                    title: `Question ${qNum}: Definite Exponential Integral`,
-                    questionTex: defQTex,
-                    steps: [...steps.slice(0,4), step6, step7, `= ${valStr}`],
-                    lowerLimit: `${uA}`,
-                    upperLimit: `${uB}`,
-                    finalValue: valStr,
-                    marks: 5
-                };
-            }
+            return { id: qNum, isDefinite: false, title: `Stage ${qNum}: Exponential Substitution`, questionTex: qTex, steps: steps, explanations: explanations, distractors: distractors };
         }
 
-        // --- GENERATOR: LOGARITHMIC ---
-        function createLogQuestion(isDefinite, qNum) {
-            let n = rInt(2, 3);
-            let qTex = `\\int \\frac{(\\ln x)^${n}}{x} \\, dx`;
+        // --- STAGE 4: INDEFINITE LOGARITHMIC INTEGRAL (6 STEPS) ---
+        function createLogQuestion(qNum) {
+            let a = rInt(1, 3);
+            let b = rInt(1, 4);
+            let uExpr = `x^2 + ${b}`;
+            let qTex = `\\int \\frac{${2*a}x}{${uExpr}} \\, dx`;
 
-            let step1 = `\\text{Let } u = \\ln x`;
-            let step2 = `du = \\frac{1}{x} \\, dx \\implies dx = x \\, du`;
-            let step3 = `\\int \\frac{u^${n}}{x} \\cdot (x \\, du) = \\int u^${n} \\, du`;
-            let step4 = `= \\frac{u^{${n+1}}}{${n+1}} + C`;
-            let step5 = `= \\frac{(\\ln x)^{${n+1}}}{${n+1}} + C`;
+            let step1 = `\\text{Set denominator as } u: u = ${uExpr}`;
+            let step2 = `\\text{Find derivative: } \\frac{du}{dx} = 2x \\implies du = 2x \\, dx`;
+            let step3 = `\\text{Express } dx: dx = \\frac{du}{2x}`;
+            let step4 = a === 1
+                ? `\\text{Substitute into fraction: } \\int \\frac{2x}{u} \\cdot \\frac{du}{2x}`
+                : `\\text{Substitute into fraction: } \\int \\frac{${2*a}x}{u} \\cdot \\frac{du}{2x}`;
+            let step5 = a === 1 ? `\\text{Integrate } \\int \\frac{1}{u} du: = \\ln|u| + C` : `\\text{Integrate } ${a} \\int \\frac{1}{u} du: = ${a} \\ln|u| + C`;
+            let step6 = a === 1 ? `\\text{Back-substitute } u: = \\ln(${uExpr}) + C` : `\\text{Back-substitute } u: = ${a} \\ln(${uExpr}) + C`;
 
-            let steps = [step1, step2, step3, step4, step5];
+            let steps = [step1, step2, step3, step4, step5, step6];
+
+            let explanations = [
+                `Set $u$ equal to the denominator $x^2 + ${b}$.`,
+                `The derivative gives $du = 2x dx$, matching the numerator factor.`,
+                `Rearrange to isolate $dx = \\frac{du}{2x}$.`,
+                `Substitute into the integrand; $2x$ in numerator and denominator cancel out.`,
+                `The standard integral $\\int \\frac{1}{u} du = \\ln|u| + C$.`,
+                `Substitute back $u = x^2 + ${b}$.`
+            ];
+
+            let distractors = [
+                [ `\\text{Set denominator as } u: u = 2x`, `\\text{Set denominator as } u: u = \\frac{1}{${uExpr}}` ],
+                [ `\\text{Find derivative: } du = (${uExpr}) dx`, `\\text{Find derivative: } du = 2 \\, dx` ],
+                [ `\\text{Express } dx: dx = 2x \\, du`, `\\text{Express } dx: dx = \\frac{du}{2}` ],
+                [ `\\text{Substitute into fraction: } \\int \\frac{1}{u} \\cdot 2x \\, du`, `\\text{Substitute into fraction: } \\int ${2*a}x u \\, du` ],
+                [ `\\text{Integrate: } = ${a === 1 ? "" : a} \\cdot \\frac{1}{u^2} + C`, `\\text{Integrate: } = ${a === 1 ? "" : a} \\ln(u^2) + C` ],
+                [ `\\text{Back-substitute } u: = ${a === 1 ? "" : a} \\ln(${uExpr})`, `\\text{Back-substitute } u: = ${a === 1 ? "" : a} \\ln(2x) + C` ]
+            ];
+
+            return { id: qNum, isDefinite: false, title: `Stage ${qNum}: Logarithmic Integral`, questionTex: qTex, steps: steps, explanations: explanations, distractors: distractors };
+        }
+
+        // --- STAGE 5: DEFINITE POLYNOMIAL INTEGRAL (7 STEPS WITH NUMERICAL FINAL VALUE) ---
+        function createDefPolyQuestion(qNum) {
+            let a = rInt(1, 2);
+            let b = rInt(1, 3);
+            let n = 2;
+            let uExpr = `x^2 + ${b}`;
+            let xA = 0, xB = 1;
+            let uA = xA*xA + b;
+            let uB = xB*xB + b;
+
+            let rawVal = (a * (Math.pow(uB, 3) - Math.pow(uA, 3))) / 3;
+            let valStr = rawVal.toFixed(3);
+
+            let distVal1 = ((a * (Math.pow(uB, 3) + Math.pow(uA, 3))) / 3).toFixed(3);
+            let distVal2 = ((a * (Math.pow(uB, 2) - Math.pow(uA, 2))) / 2).toFixed(3);
+
+            let qTex = `\\int_{${xA}}^{${xB}} ${2*a}x (${uExpr})^${n} \\, dx`;
+
+            let step1 = `\\text{Set substitution: } u = ${uExpr}`;
+            let step2 = `\\text{Compute differential: } du = 2x \\, dx \\implies dx = \\frac{du}{2x}`;
+            let step3 = `\\text{Transform lower limit } (x=${xA}): u_a = (${xA})^2 + ${b} = ${uA}`;
+            let step4 = `\\text{Transform upper limit } (x=${xB}): u_b = (${xB})^2 + ${b} = ${uB}`;
+            let step5 = a === 1
+                ? `\\text{Rewrite integral in } u: \\int_{${uA}}^{${uB}} u^${n} \\, du`
+                : `\\text{Rewrite integral in } u: ${a} \\int_{${uA}}^{${uB}} u^${n} \\, du`;
+            let step6 = a === 1
+                ? `\\text{Apply Fundamental Theorem: } \\left[ \\frac{u^3}{3} \\right]_{${uA}}^{${uB}} = \\frac{${uB}^3 - ${uA}^3}{3}`
+                : `\\text{Apply Fundamental Theorem: } \\left[ ${fmtFrac(a, 3)} u^3 \\right]_{${uA}}^{${uB}} = ${fmtFrac(a, 3)} (${uB}^3 - ${uA}^3)`;
+            let step7 = `\\text{Final calculated numerical value: } \\approx ${valStr}`;
+
+            let steps = [step1, step2, step3, step4, step5, step6, step7];
+
+            let explanations = [
+                `Choose $u = ${uExpr}$ as the inner function.`,
+                `Differential $du = 2x dx \\implies dx = \\frac{du}{2x}$.`,
+                `When $x = ${xA}$, the lower limit transforms to $u_a = ${uA}$.`,
+                `When $x = ${xB}$, the upper limit transforms to $u_b = ${uB}$.`,
+                `Substitute $u$, $dx$, and new limits $u_a=${uA}$ to $u_b=${uB}$.`,
+                `Evaluate antiderivative at upper limit minus lower limit: $\\left[ \\frac{u^3}{3} \\right]_{${uA}}^{${uB}}$.`,
+                `Use a calculator to compute the final numerical value: $\\frac{${a}}{3}(${uB}^3 - ${uA}^3) \\approx ${valStr}$.`
+            ];
+
+            let distractors = [
+                [ `\\text{Set substitution: } u = 2x`, `\\text{Set substitution: } u = (${uExpr})^${n}` ],
+                [ `\\text{Compute differential: } du = x \\, dx`, `\\text{Compute differential: } du = 2 \\, dx` ],
+                [ `\\text{Transform lower limit: } u_a = 0`, `\\text{Transform lower limit: } u_a = ${xA}` ],
+                [ `\\text{Transform upper limit: } u_b = 1`, `\\text{Transform upper limit: } u_b = ${xB+1}` ],
+                [ `\\text{Rewrite integral in } u: \\int_{${xA}}^{${xB}} u^${n} \\, du`, `\\text{Rewrite integral in } u: \\int_{${uA}}^{${uB}} 2x u^${n} \\, du` ],
+                [ `\\text{Apply Fundamental Theorem: } \\left[ u^3 \\right]_{${uA}}^{${uB}} = ${uB}^3 - ${uA}^3`, `\\text{Apply Fundamental Theorem: } \\left[ \\frac{u^2}{2} \\right]_{${uA}}^{${uB}} = \\frac{${uB}^2 - ${uA}^2}{2}` ],
+                [ `\\text{Final calculated numerical value: } \\approx ${distVal1}`, `\\text{Final calculated numerical value: } \\approx ${distVal2}` ]
+            ];
 
             return {
-                id: qNum,
-                isDefinite: false,
-                title: `Question ${qNum}: Natural Logarithm Substitution`,
-                questionTex: qTex,
-                steps: steps,
-                marks: 5
+                id: qNum, isDefinite: true, title: `Stage ${qNum}: Definite Polynomial Integral`,
+                questionTex: qTex, steps: steps, explanations: explanations, distractors: distractors
             };
         }
 
-        // --- DISTRACTOR GENERATOR ---
-        function makeDistractor(correctStepTex, stepIdx) {
-            if (correctStepTex.includes("Let u =")) {
-                return correctStepTex.replace("x^2", "x").replace("x^3", "x^2") + " + 1";
-            }
-            if (correctStepTex.includes("du")) {
-                return correctStepTex.replace("dx =", "du =").replace("\\frac{du}", "du \\cdot");
-            }
-            if (correctStepTex.includes("\\int")) {
-                return correctStepTex.replace("du", "dx").replace("u^", "x^");
-            }
-            if (correctStepTex.includes("+ C")) {
-                return correctStepTex.replace("+ C", "").replace("\\frac", "");
-            }
-            return `\\text{Incorrect step: } ` + correctStepTex.replace("=", "\\neq");
+        // --- STAGE 6: DEFINITE EXPONENTIAL INTEGRAL (7 STEPS WITH NUMERICAL FINAL VALUE) ---
+        function createDefExpQuestion(qNum) {
+            let a = rInt(1, 2);
+            let b = rInt(1, 2);
+            let uExpr = `x^2 + ${b}`;
+            let xA = 0, xB = 1;
+            let uA = xA*xA + b;
+            let uB = xB*xB + b;
+
+            let rawVal = a * (Math.exp(uB) - Math.exp(uA));
+            let valStr = rawVal.toFixed(3);
+
+            let distVal1 = (a * (Math.exp(uB) + Math.exp(uA))).toFixed(3);
+            let distVal2 = (a * Math.exp(uB - uA)).toFixed(3);
+
+            let exprTex = a === 1 ? `e^{${uB}} - e^{${uA}}` : `${a}(e^{${uB}} - e^{${uA}})`;
+            let qTex = `\\int_{${xA}}^{${xB}} ${2*a}x e^{${uExpr}} \\, dx`;
+
+            let step1 = `\\text{Choose substitution: } u = ${uExpr}`;
+            let step2 = `\\text{Find differential: } du = 2x \\, dx \\implies dx = \\frac{du}{2x}`;
+            let step3 = `\\text{Transform lower limit } (x=${xA}): u_a = (${xA})^2 + ${b} = ${uA}`;
+            let step4 = `\\text{Transform upper limit } (x=${xB}): u_b = (${xB})^2 + ${b} = ${uB}`;
+            let step5 = a === 1
+                ? `\\text{Rewrite in } u \\text{ with new limits: } \\int_{${uA}}^{${uB}} e^u \\, du`
+                : `\\text{Rewrite in } u \\text{ with new limits: } ${a} \\int_{${uA}}^{${uB}} e^u \\, du`;
+            let step6 = a === 1
+                ? `\\text{Apply Fundamental Theorem: } \\left[ e^u \\right]_{${uA}}^{${uB}} = e^{${uB}} - e^{${uA}}`
+                : `\\text{Apply Fundamental Theorem: } \\left[ ${a} e^u \\right]_{${uA}}^{${uB}} = ${a}(e^{${uB}} - e^{${uA}})`;
+            let step7 = `\\text{Final calculated numerical value: } \\approx ${valStr}`;
+
+            let steps = [step1, step2, step3, step4, step5, step6, step7];
+
+            let explanations = [
+                `Let $u = ${uExpr}$.`,
+                `$du = 2x dx \\implies dx = \\frac{du}{2x}$.`,
+                `At $x = ${xA}$, $u_a = ${uA}$.`,
+                `At $x = ${xB}$, $u_b = ${uB}$.`,
+                `Substitute $u$ and limits $u \\in [${uA}, ${uB}]$.`,
+                `Antiderivative is $e^u$. Evaluating at limits gives $F(${uB}) - F(${uA}) = ${exprTex}$.`,
+                `Using a calculator to compute ${exprTex} yields the final numerical value $\\approx ${valStr}$.`
+            ];
+
+            let distractors = [
+                [ `\\text{Choose substitution: } u = e^{${uExpr}}`, `\\text{Choose substitution: } u = 2x` ],
+                [ `\\text{Find differential: } du = e^{${uExpr}} dx`, `\\text{Find differential: } du = x \\, dx` ],
+                [ `\\text{Transform lower limit: } u_a = 0`, `\\text{Transform lower limit: } u_a = ${xA}` ],
+                [ `\\text{Transform upper limit: } u_b = 1`, `\\text{Transform upper limit: } u_b = ${xB+1}` ],
+                [ `\\text{Rewrite in } u: \\int_{${xA}}^{${xB}} e^u \\, du`, `\\text{Rewrite in } u: \\int_{${uA}}^{${uB}} 2x e^u \\, du` ],
+                [ `\\text{Apply Fundamental Theorem: } \\left[ \\frac{e^{u+1}}{u+1} \\right]_{${uA}}^{${uB}} = \\frac{e^{${uB}+1} - e^{${uA}+1}}{${uB}+1}`, `\\text{Apply Fundamental Theorem: } \\left[ u e^u \\right]_{${uA}}^{${uB}} = ${uB} e^{${uB}} - ${uA} e^{${uA}}` ],
+                [ `\\text{Final calculated numerical value: } \\approx ${distVal1}`, `\\text{Final calculated numerical value: } \\approx ${distVal2}` ]
+            ];
+
+            return {
+                id: qNum, isDefinite: true, title: `Stage ${qNum}: Definite Exponential Integral`,
+                questionTex: qTex, steps: steps, explanations: explanations, distractors: distractors
+            };
         }
 
-        // --- RENDER CURRENT QUESTION ---
+        function generate3ChoicesForStep(sIdx, qObj) {
+            let correctTex = qObj.steps[sIdx];
+            let distractorPair = qObj.distractors[sIdx];
+
+            let choices = [
+                { id: `step-${sIdx}-opt-0`, tex: correctTex, isCorrect: true, stepIdx: sIdx },
+                { id: `step-${sIdx}-opt-1`, tex: distractorPair[0], isCorrect: false, stepIdx: sIdx },
+                { id: `step-${sIdx}-opt-2`, tex: distractorPair[1], isCorrect: false, stepIdx: sIdx }
+            ];
+
+            return choices.sort(() => Math.random() - 0.5);
+        }
+
         function loadQuestion(index) {
             userAssignedSteps = {};
+            perStepOptionsBank = {};
+            selectedOptionId = null;
             const q = questionsData[index];
 
             document.getElementById('stage-num').innerText = index + 1;
             document.getElementById('q-number-title').innerText = q.title;
-            document.getElementById('q-type-badge').innerText = q.isDefinite ? "Definite Integral (7 Steps)" : "Indefinite Integral (5 Steps)";
+            document.getElementById('q-type-badge').innerText = q.isDefinite ? `Definite Integral (${q.steps.length} Steps)` : `Indefinite Integral (${q.steps.length} Steps)`;
             document.getElementById('feedback-message').innerText = "";
-            document.getElementById('feedback-message').className = "text-base font-bold min-h-[24px]";
 
-            // Render Math Title
-            katex.render(q.questionTex, document.getElementById('question-text'), { displayMode: true });
+            katex.render(q.questionTex, document.getElementById('question-text'), { displayMode: true, throwOnError: false });
 
-            // Show/Hide Definite Limits Box
-            const limitsBox = document.getElementById('limits-input-container');
-            if (q.isDefinite) {
-                limitsBox.classList.remove('hidden');
-                document.getElementById('input-lower-limit').value = "";
-                document.getElementById('input-upper-limit').value = "";
-                document.getElementById('input-final-value').value = "";
-            } else {
-                limitsBox.classList.add('hidden');
-            }
-
-            // Build Target Step Drop Zones
             const targetContainer = document.getElementById('steps-target-container');
             targetContainer.innerHTML = "";
 
-            const totalSteps = q.steps.length;
-            for (let i = 0; i < totalSteps; i++) {
+            for (let i = 0; i < q.steps.length; i++) {
+                perStepOptionsBank[i] = generate3ChoicesForStep(i, q);
+
                 const zone = document.createElement('div');
                 zone.className = "drop-zone flex items-center justify-between p-3 cursor-pointer";
                 zone.dataset.stepIndex = i;
 
                 zone.innerHTML = `
-                    <span class="text-xs font-bold text-slate-500 mr-2 uppercase">Step ${i+1}</span>
-                    <div class="drop-content flex-grow flex items-center justify-center text-slate-400 italic text-sm">
-                        Drop Step ${i+1} Card Here
+                    <span class="text-xs font-bold text-slate-500 mr-2 uppercase pointer-events-none">Step ${i+1}</span>
+                    <div class="drop-content flex-grow flex items-center justify-center text-slate-400 italic text-sm pointer-events-none">
+                        Drop / Tap Step ${i+1} Here
                     </div>
                 `;
 
-                // Add Drag & Drop Listeners
-                zone.addEventListener('dragover', handleDragOver);
-                zone.addEventListener('dragleave', handleDragLeave);
-                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+                zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+                    const cardId = e.dataTransfer.getData('text/plain');
+                    if (cardId) placeCardInSlot(i, cardId);
+                });
+
+                zone.addEventListener('click', () => {
+                    if (userAssignedSteps[i]) {
+                        delete userAssignedSteps[i];
+                        zone.classList.remove('filled');
+                        const contentDiv = zone.querySelector('.drop-content');
+                        contentDiv.className = "drop-content flex-grow flex items-center justify-center text-slate-400 italic text-sm pointer-events-none";
+                        contentDiv.innerHTML = `Drop / Tap Step ${i+1} Here`;
+                        playSound('drop');
+                        renderOptionsBank();
+                    } else if (selectedOptionId) {
+                        placeCardInSlot(i, selectedOptionId);
+                        selectedOptionId = null;
+                    }
+                });
 
                 targetContainer.appendChild(zone);
             }
 
-            // Build Options Bank (3 options per step)
-            activeOptions = [];
-            q.steps.forEach((correctTex, sIdx) => {
-                // Correct option
-                activeOptions.push({ id: `c-${sIdx}`, tex: correctTex, isCorrect: true, stepIdx: sIdx });
-                // Distractor 1
-                activeOptions.push({ id: `d1-${sIdx}`, tex: makeDistractor(correctTex, sIdx), isCorrect: false, stepIdx: sIdx });
-                // Distractor 2
-                activeOptions.push({ id: `d2-${sIdx}`, tex: correctTex.replace("+", "-") + " ", isCorrect: false, stepIdx: sIdx });
+            renderOptionsBank();
+        }
+
+        function getNextEmptyStepIndex() {
+            const q = questionsData[currentQuestionIdx];
+            for (let i = 0; i < q.steps.length; i++) {
+                if (!userAssignedSteps[i]) return i;
+            }
+            return null;
+        }
+
+        function placeCardInSlot(slotIndex, cardId) {
+            userAssignedSteps[slotIndex] = cardId;
+            const zone = document.querySelector(`.drop-zone[data-step-index="${slotIndex}"]`);
+            
+            let optObj = null;
+            Object.values(perStepOptionsBank).forEach(list => {
+                const found = list.find(o => o.id === cardId);
+                if (found) optObj = found;
             });
 
-            // Shuffle Options
-            activeOptions.sort(() => Math.random() - 0.5);
+            zone.classList.add('filled');
+            const contentDiv = zone.querySelector('.drop-content');
+            contentDiv.innerHTML = "";
+            contentDiv.className = "drop-content flex-grow flex items-center justify-center text-yellow-300 font-semibold pointer-events-none";
 
+            katex.render(optObj.tex, contentDiv, { displayMode: false, throwOnError: false });
+            playSound('drop');
             renderOptionsBank();
         }
 
         function renderOptionsBank() {
             const bank = document.getElementById('options-bank');
+            const badge = document.getElementById('active-step-badge');
             bank.innerHTML = "";
 
-            activeOptions.forEach(opt => {
-                // Skip if assigned to a slot
-                if (Object.values(userAssignedSteps).includes(opt.id)) return;
+            const targetStepIdx = getNextEmptyStepIndex();
 
+            if (targetStepIdx === null) {
+                badge.innerText = "All Steps Placed";
+                badge.className = "text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/40";
+                
+                bank.innerHTML = `
+                    <div class="text-center py-6 space-y-2">
+                        <div class="text-3xl">🎉</div>
+                        <p class="text-sm text-emerald-400 font-bold">All step slots are filled!</p>
+                        <p class="text-xs text-slate-400">Tap any step slot to modify, or click <strong>SUBMIT & AUTO-GRADE STAGE</strong> below.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            badge.innerText = `Step ${targetStepIdx + 1} Choices (1 Correct, 2 Distractors)`;
+            badge.className = "text-xs bg-pink-500/20 text-pink-300 px-2.5 py-0.5 rounded-full border border-pink-500/40";
+
+            const optionsForCurrentStep = perStepOptionsBank[targetStepIdx] || [];
+
+            optionsForCurrentStep.forEach(opt => {
                 const card = document.createElement('div');
-                card.className = "draggable-card text-sm text-center select-none";
+                card.className = `draggable-card text-sm text-center ${selectedOptionId === opt.id ? 'selected-card' : ''}`;
                 card.draggable = true;
                 card.id = opt.id;
 
-                katex.render(opt.tex, card, { displayMode: false });
+                katex.render(opt.tex, card, { displayMode: false, throwOnError: false });
 
-                card.addEventListener('dragstart', handleDragStart);
-                card.addEventListener('dragend', handleDragEnd);
+                card.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', opt.id);
+                    playSound('select');
+                });
+
+                card.addEventListener('click', () => {
+                    if (selectedOptionId === opt.id) {
+                        selectedOptionId = null;
+                    } else {
+                        selectedOptionId = opt.id;
+                        playSound('select');
+                    }
+                    renderOptionsBank();
+                });
 
                 bank.appendChild(card);
             });
         }
 
-        // --- DRAG AND DROP HANDLERS ---
-        let draggedCardId = null;
-
-        function handleDragStart(e) {
-            draggedCardId = this.id;
-            this.classList.add('dragging');
-            e.dataTransfer.setData('text/plain', this.id);
-        }
-
-        function handleDragEnd() {
-            this.classList.remove('dragging');
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-            this.classList.add('drag-over');
-        }
-
-        function handleDragLeave() {
-            this.classList.remove('drag-over');
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            this.classList.remove('drag-over');
-
-            const slotIndex = this.dataset.stepIndex;
-            const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
-
-            if (cardId) {
-                userAssignedSteps[slotIndex] = cardId;
-                updateDropZoneUI(slotIndex, cardId);
-                renderOptionsBank();
-            }
-        }
-
-        function updateDropZoneUI(slotIndex, cardId) {
-            const zone = document.querySelector(`.drop-zone[data-step-index="${slotIndex}"]`);
-            const optObj = activeOptions.find(o => o.id === cardId);
-
-            zone.classList.add('filled');
-            const contentDiv = zone.querySelector('.drop-content');
-            contentDiv.innerHTML = "";
-            contentDiv.className = "drop-content flex-grow flex items-center justify-center text-yellow-300 font-semibold";
-
-            katex.render(optObj.tex, contentDiv, { displayMode: false });
-
-            // Allow clicking on filled zone to clear
-            zone.onclick = () => {
-                delete userAssignedSteps[slotIndex];
-                zone.classList.remove('filled');
-                contentDiv.className = "drop-content flex-grow flex items-center justify-center text-slate-400 italic text-sm";
-                contentDiv.innerHTML = `Drop Step ${parseInt(slotIndex)+1} Card Here`;
-                zone.onclick = null;
-                renderOptionsBank();
-            };
-        }
-
-        // --- AUTO MARKING & FEEDBACK ENGINE ---
         function submitAndMark() {
             const q = questionsData[currentQuestionIdx];
-            const feedbackEl = document.getElementById('feedback-message');
-            let mark = 0;
             let totalSteps = q.steps.length;
 
-            // 1. Check Drag & Drop Steps
             let correctStepsCount = 0;
+            let stepResults = [];
+
             for (let i = 0; i < totalSteps; i++) {
                 const assignedCardId = userAssignedSteps[i];
+                let isCorrect = false;
+                let userTex = "Not answered";
+
                 if (assignedCardId) {
-                    const optObj = activeOptions.find(o => o.id === assignedCardId);
-                    if (optObj && optObj.isCorrect && optObj.stepIdx === i) {
-                        correctStepsCount++;
+                    const optObj = perStepOptionsBank[i].find(o => o.id === assignedCardId);
+                    if (optObj) {
+                        userTex = optObj.tex;
+                        if (optObj.isCorrect && optObj.stepIdx === i) {
+                            isCorrect = true;
+                            correctStepsCount++;
+                        }
                     }
                 }
+
+                stepResults.push({
+                    stepNum: i + 1,
+                    isCorrect: isCorrect,
+                    userTex: userTex,
+                    correctTex: q.steps[i],
+                    explanation: q.explanations[i]
+                });
             }
 
-            // Award portion of 5 marks based on step accuracy
-            let stepScore = (correctStepsCount / totalSteps) * (q.isDefinite ? 3 : 5);
-
-            // 2. Check Input Fields if Definite Integral
-            let inputScore = 0;
-            if (q.isDefinite) {
-                const userLower = document.getElementById('input-lower-limit').value.trim();
-                const userUpper = document.getElementById('input-upper-limit').value.trim();
-                const userFinal = document.getElementById('input-final-value').value.trim();
-
-                let boundsCorrect = (userLower === q.lowerLimit && userUpper === q.upperLimit);
-                let valCorrect = (userFinal === q.finalValue);
-
-                if (boundsCorrect) inputScore += 1;
-                if (valCorrect) inputScore += 1;
-            }
-
-            mark = Math.round(stepScore + inputScore);
-            totalScore += mark;
+            let stageMark = Math.round((correctStepsCount / totalSteps) * 5);
+            totalScore += stageMark;
             document.getElementById('current-score').innerText = totalScore;
 
-            // Detailed Feedback Output
-            if (mark === 5) {
-                feedbackEl.className = "text-base font-bold text-green-400";
-                feedbackEl.innerText = `✨ Excellent! All steps and calculations are correct! (+5 Marks)`;
-            } else if (mark >= 3) {
-                feedbackEl.className = "text-base font-bold text-yellow-400";
-                feedbackEl.innerText = `👍 Good attempt! You scored ${mark}/5 marks. Review step ordering!`;
+            if (stageMark >= 4) {
+                playSound('correct');
             } else {
-                feedbackEl.className = "text-base font-bold text-pink-500";
-                feedbackEl.innerText = `❌ Incorrect steps found. You scored ${mark}/5 marks.`;
+                playSound('wrong');
             }
 
-            // Advance to next stage after short pause
-            setTimeout(() => {
-                currentQuestionIdx++;
-                if (currentQuestionIdx < questionsData.length) {
-                    loadQuestion(currentQuestionIdx);
+            showFeedbackModal(stageMark, stepResults);
+        }
+
+        function showFeedbackModal(stageMark, stepResults) {
+            const q = questionsData[currentQuestionIdx];
+            const modal = document.getElementById('feedback-modal');
+            
+            document.getElementById('modal-stage-title').innerText = `${q.title} Review`;
+            document.getElementById('modal-score-subtitle').innerText = `Score for this stage: ${stageMark} / 5 Marks (${stepResults.filter(r => r.isCorrect).length} of ${q.steps.length} steps correct)`;
+
+            const feedbackContainer = document.getElementById('modal-steps-feedback');
+            feedbackContainer.innerHTML = "";
+
+            stepResults.forEach(r => {
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border ${r.isCorrect ? 'border-emerald-500/40 bg-emerald-950/20' : 'border-rose-500/40 bg-rose-950/20'} space-y-3 shadow-lg`;
+
+                // Header badge
+                const header = document.createElement('div');
+                header.className = "flex items-center justify-between font-bold text-sm border-b border-slate-800 pb-2";
+                header.innerHTML = `
+                    <span class="${r.isCorrect ? 'text-emerald-400' : 'text-rose-400'} flex items-center gap-1.5">
+                        ${r.isCorrect ? '✅ Step ' + r.stepNum + ': Correct' : '❌ Step ' + r.stepNum + ': Needs Attention'}
+                    </span>
+                    <span class="text-xs px-2 py-0.5 rounded ${r.isCorrect ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'} font-semibold">
+                        ${r.isCorrect ? 'Matched Correct Step' : 'Incorrect Choice'}
+                    </span>
+                `;
+                card.appendChild(header);
+
+                // Side-by-side grid container
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch";
+
+                // Left Column: Student Choice vs Correct Answer
+                const choiceCol = document.createElement('div');
+                choiceCol.className = "space-y-2.5 flex flex-col justify-center bg-slate-900/60 p-3 rounded-lg border border-slate-800";
+
+                if (!r.isCorrect) {
+                    const userDiv = document.createElement('div');
+                    userDiv.className = "text-xs text-slate-300";
+                    userDiv.innerHTML = `<div class="text-rose-400 font-bold mb-1">Your Selected Choice:</div>`;
+                    const userMath = document.createElement('div');
+                    userMath.className = "bg-rose-950/40 p-2 rounded border border-rose-800/50 text-rose-200 text-sm overflow-x-auto";
+                    if (r.userTex === "Not answered") {
+                        userMath.textContent = "No card placed for this step";
+                    } else {
+                        katex.render(r.userTex, userMath, { displayMode: false, throwOnError: false });
+                    }
+                    userDiv.appendChild(userMath);
+                    choiceCol.appendChild(userDiv);
+
+                    const correctDiv = document.createElement('div');
+                    correctDiv.className = "text-xs text-slate-300";
+                    correctDiv.innerHTML = `<div class="text-emerald-400 font-bold mb-1">Correct Step:</div>`;
+                    const correctMath = document.createElement('div');
+                    correctMath.className = "bg-emerald-950/40 p-2 rounded border border-emerald-800/50 text-emerald-200 text-sm overflow-x-auto";
+                    katex.render(r.correctTex, correctMath, { displayMode: false, throwOnError: false });
+                    correctDiv.appendChild(correctMath);
+                    choiceCol.appendChild(correctDiv);
                 } else {
-                    finishGame();
+                    const correctDiv = document.createElement('div');
+                    correctDiv.className = "text-xs text-slate-300";
+                    correctDiv.innerHTML = `<div class="text-emerald-400 font-bold mb-1">Your Choice (Correct):</div>`;
+                    const correctMath = document.createElement('div');
+                    correctMath.className = "bg-emerald-950/40 p-2 rounded border border-emerald-800/50 text-emerald-200 text-sm overflow-x-auto";
+                    katex.render(r.correctTex, correctMath, { displayMode: false, throwOnError: false });
+                    correctDiv.appendChild(correctMath);
+                    choiceCol.appendChild(correctDiv);
                 }
-            }, 2000);
+
+                // Right Column: Teacher Comment & Explanation Side-by-Side
+                const explCol = document.createElement('div');
+                explCol.className = "flex flex-col justify-center bg-slate-900/60 p-3 rounded-lg border border-sky-900/40 space-y-1.5";
+                
+                const explHeader = document.createElement('div');
+                explHeader.className = "text-xs font-bold text-sky-400 flex items-center gap-1";
+                explHeader.innerHTML = `💡 Explanation & Guidance:`;
+                explCol.appendChild(explHeader);
+
+                const explText = document.createElement('div');
+                explText.className = "text-xs text-slate-200 leading-relaxed";
+                renderMathText(r.explanation, explText);
+                explCol.appendChild(explText);
+
+                grid.appendChild(choiceCol);
+                grid.appendChild(explCol);
+
+                card.appendChild(grid);
+                feedbackContainer.appendChild(card);
+            });
+
+            modal.classList.remove('hidden');
         }
 
-        // --- GAME FLOW CONTROL ---
-        function startGame() {
-            questionsData = generateQuestions();
-            currentQuestionIdx = 0;
-            totalScore = 0;
-            document.getElementById('current-score').innerText = totalScore;
-
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('end-screen').classList.add('hidden');
-            document.getElementById('game-screen').classList.remove('hidden');
-            document.getElementById('hud').classList.remove('hidden');
-
-            loadQuestion(0);
+        function renderMathText(str, targetEl) {
+            targetEl.innerHTML = "";
+            const parts = str.split('$');
+            parts.forEach((part, index) => {
+                if (index % 2 === 1) {
+                    const mathSpan = document.createElement('span');
+                    katex.render(part, mathSpan, { displayMode: false, throwOnError: false });
+                    targetEl.appendChild(mathSpan);
+                } else {
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = part;
+                    targetEl.appendChild(textSpan);
+                }
+            });
         }
+
+        document.getElementById('next-stage-btn').addEventListener('click', () => {
+            document.getElementById('feedback-modal').classList.add('hidden');
+            currentQuestionIdx++;
+            if (currentQuestionIdx < questionsData.length) {
+                loadQuestion(currentQuestionIdx);
+            } else {
+                finishGame();
+            }
+        });
 
         function finishGame() {
             document.getElementById('game-screen').classList.add('hidden');
@@ -740,22 +957,39 @@
             document.getElementById('end-screen').classList.remove('hidden');
 
             document.getElementById('final-score-display').innerText = `${totalScore} / 30`;
-
             const evalText = document.getElementById('final-eval-text');
+
             if (totalScore >= 25) {
-                evalText.innerText = "🌟 S-Class Integration Master! Outstanding Work!";
+                evalText.innerText = "🌟 RANK: S-CLASS INTEGRATION MASTER! PERFECT ACADEMY SCORE!";
+                evalText.className = "text-lg text-emerald-400 font-bold";
             } else if (totalScore >= 18) {
-                evalText.innerText = "⚔️ A-Class Mathematician! Solid substitution skills.";
+                evalText.innerText = "⚔️ RANK: A-CLASS MATH WARRIOR! GREAT SUBSTITUTION SKILLS!";
+                evalText.className = "text-lg text-sky-400 font-bold";
             } else {
-                evalText.innerText = "📖 Keep training! Review u-substitution rules and try again!";
+                evalText.innerText = "📖 RANK: APPRENTICE! KEEP PRACTICING INTEGRATION BY SUBSTITUTION!";
+                evalText.className = "text-lg text-yellow-400 font-bold";
             }
         }
 
-        // --- EVENT LISTENERS ---
-        document.getElementById('start-btn').addEventListener('click', startGame);
-        document.getElementById('restart-btn').addEventListener('click', startGame);
-        document.getElementById('submit-step-btn').addEventListener('click', submitAndMark);
+        document.getElementById('start-btn').addEventListener('click', () => {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('hud').classList.remove('hidden');
+            questionsData = generateQuestions();
+            currentQuestionIdx = 0;
+            totalScore = 0;
+            document.getElementById('current-score').innerText = "0";
+            loadQuestion(0);
+        });
 
+        document.getElementById('submit-step-btn').addEventListener('click', () => {
+            submitAndMark();
+        });
+
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        });
     </script>
 </body>
 </html>
