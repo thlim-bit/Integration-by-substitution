@@ -3,751 +3,758 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integration Mastery</title>
+    <title>Anime Math Academy: Integration by Substitution</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- KaTeX for beautiful math rendering -->
+    <!-- KaTeX for crisp LaTeX math rendering -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
 
-    <!-- TensorFlow.js and Handpose for Hand Tracking -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
-
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap');
+
         body {
             margin: 0;
-            overflow: hidden;
-            background-color: #0f172a; /* Slate 900 */
-            color: #f8fafc;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
         }
 
-        /* Sci-fi Background Grid */
-        .grid-bg {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+        .title-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Anime Cyber-Grid Background */
+        .cyber-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             background-image: 
-                linear-gradient(rgba(56, 189, 248, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(56, 189, 248, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
+                linear-gradient(to right, rgba(236, 72, 153, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(56, 189, 248, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
             z-index: -2;
-            transform: perspective(500px) rotateX(60deg) translateY(-100px) scale(3);
-            animation: gridMove 20s linear infinite;
         }
 
-        @keyframes gridMove {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 500px; }
-        }
-
-        .ambient-light {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 50% 30%, rgba(14, 165, 233, 0.2) 0%, rgba(15, 23, 42, 1) 70%);
+        .glow-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at 50% 20%, rgba(168, 85, 247, 0.15) 0%, rgba(11, 15, 25, 0.95) 75%);
             z-index: -1;
         }
 
-        /* Option Buttons */
-        .option-btn {
-            position: relative;
-            background: rgba(30, 41, 59, 0.85);
-            border: 2px solid #38bdf8;
-            border-radius: 12px;
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3), inset 0 0 10px rgba(56, 189, 248, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: all 0.2s ease-out;
-            min-height: 90px;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        /* Loading Bar for Hand Selection */
-        .hold-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 8px;
-            background: #eab308;
-            width: 0%;
-            transition: width 0.1s linear;
-            box-shadow: 0 0 10px #eab308;
-        }
-
-        /* Finger Indicators */
-        .finger-badge {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #2563eb;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border: 2px solid #38bdf8;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .option-btn:hover:not(:disabled), .option-btn.targeting {
-            background: rgba(56, 189, 248, 0.2);
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(56, 189, 248, 0.6);
-            border-color: #eab308;
-        }
-
-        .option-btn.hit-correct {
-            background: rgba(34, 197, 94, 0.9) !important;
-            border-color: #4ade80 !important;
-            box-shadow: 0 0 30px #4ade80 !important;
-            transform: scale(1.05) !important;
-        }
-
-        .option-btn.hit-wrong {
-            background: rgba(239, 68, 68, 0.9) !important;
-            border-color: #f87171 !important;
-            box-shadow: 0 0 30px #f87171 !important;
-            transform: scale(0.95) !important;
-        }
-
-        /* UI Overlays */
-        .overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            backdrop-filter: blur(5px);
-        }
-
-        .hidden { display: none !important; }
-
-        .btn {
-            background: linear-gradient(135deg, #0ea5e9, #2563eb);
-            padding: 15px 40px;
+        /* Drag & Drop Cards */
+        .draggable-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+            border: 2px solid rgba(56, 189, 248, 0.5);
             border-radius: 8px;
-            font-size: 1.5rem;
-            font-weight: bold;
+            padding: 10px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        .draggable-card:active {
+            cursor: grabbing;
+            transform: scale(1.02);
+            border-color: #ec4899;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.6);
+        }
+        .draggable-card.dragging {
+            opacity: 0.4;
+        }
+
+        /* Target Drop Zones */
+        .drop-zone {
+            min-height: 60px;
+            border: 2px dashed rgba(168, 85, 247, 0.5);
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            transition: all 0.2s ease;
+        }
+        .drop-zone.drag-over {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+        .drop-zone.filled {
+            border-style: solid;
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        /* Anime Button Effects */
+        .cyber-btn {
+            background: linear-gradient(90deg, #ec4899, #8b5cf6);
+            border: none;
             color: white;
-            border: 2px solid #38bdf8;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
-            margin-top: 20px;
-        }
-        .btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.6);
-        }
-        .btn:disabled {
-            background: #475569;
-            border-color: #64748b;
-            color: #94a3b8;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        #question-box {
-            background: rgba(30, 41, 59, 0.95);
-            padding: 20px 30px;
-            border-radius: 16px;
-            border: 2px solid #eab308;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(234, 179, 8, 0.2);
-            text-align: center;
-            z-index: 10;
-            min-width: 450px;
-            max-width: 800px;
-        }
-
-        .math-display {
-            font-size: 2rem;
-            color: #eab308;
-            margin-top: 10px;
-        }
-
-        .hud {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            font-size: 1.5rem;
             font-weight: bold;
-            text-align: right;
-            z-index: 10;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+            transition: all 0.2s ease;
+        }
+        .cyber-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(236, 72, 153, 0.8);
         }
 
-        #cam-container {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 160px;
-            height: 120px;
-            border: 2px solid #38bdf8;
-            border-radius: 10px;
-            overflow: hidden;
-            z-index: 50;
-            background: #000;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        .math-input {
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #8b5cf6;
+            color: #38bdf8;
+            font-weight: bold;
+            border-radius: 6px;
+            padding: 6px 12px;
+            outline: none;
+            transition: border-color 0.2s;
         }
-        
-        #webcam {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1); /* Mirror image */
+        .math-input:focus {
+            border-color: #ec4899;
+            box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col justify-between">
 
-    <!-- Background -->
-    <div class="grid-bg"></div>
-    <div class="ambient-light"></div>
+    <div class="cyber-grid"></div>
+    <div class="glow-overlay"></div>
 
-    <!-- HUD -->
-    <div id="hud" class="hidden text-sky-400">
-        <div id="level-display">Level: 1/10</div>
-        <div id="score-display" class="text-green-400 mt-2">Score: 0</div>
-    </div>
-
-    <!-- Camera Feed -->
-    <div id="cam-container" class="hidden">
-        <video id="webcam" autoplay playsinline muted></video>
-        <div class="absolute bottom-1 left-1 bg-black bg-opacity-70 text-xs px-2 py-1 rounded text-sky-400" id="detection-status">Searching for hand...</div>
-    </div>
-
-    <!-- Gameplay Area -->
-    <div id="game-container" class="hidden w-full h-full absolute inset-0 flex flex-col items-center justify-center p-4 z-10">
-        
-        <div id="question-box" class="mb-8 mt-4">
-            <h2 class="text-lg text-slate-300 font-bold uppercase tracking-wider">Evaluate the Integral</h2>
-            <div id="question-text" class="math-display"></div>
+    <!-- Header / HUD -->
+    <header class="p-4 border-b border-purple-800/50 bg-slate-900/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl">⛩️</span>
+            <div>
+                <h1 class="title-font text-xl md:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-400 to-sky-400">
+                    INTEGRATION ACADEMY
+                </h1>
+                <p class="text-xs text-sky-400 tracking-wider">u-Substitution Arc</p>
+            </div>
         </div>
 
-        <div id="targets-container" class="grid grid-cols-2 gap-x-6 gap-y-8 w-full max-w-4xl">
-            <button class="option-btn" data-index="0">
-                <div class="finger-badge">☝️ 1 Finger</div>
-                <span class="math-opt"></span>
-                <div class="hold-progress" id="prog-0"></div>
-            </button>
-            <button class="option-btn" data-index="1">
-                <div class="finger-badge">✌️ 2 Fingers</div>
-                <span class="math-opt"></span>
-                <div class="hold-progress" id="prog-1"></div>
-            </button>
-            <button class="option-btn" data-index="2">
-                <div class="finger-badge">🤟 3 Fingers</div>
-                <span class="math-opt"></span>
-                <div class="hold-progress" id="prog-2"></div>
-            </button>
-            <button class="option-btn" data-index="3">
-                <div class="finger-badge">🖐️ 4 Fingers</div>
-                <span class="math-opt"></span>
-                <div class="hold-progress" id="prog-3"></div>
+        <div id="hud" class="hidden flex items-center space-x-6 text-lg font-bold">
+            <div class="bg-slate-800/90 px-4 py-1.5 rounded-lg border border-pink-500/40 text-pink-400">
+                Stage: <span id="stage-num" class="text-white">1</span>/6
+            </div>
+            <div class="bg-slate-800/90 px-4 py-1.5 rounded-lg border border-sky-500/40 text-sky-400">
+                Score: <span id="current-score" class="text-yellow-400">0</span> / 30
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-4 py-6 max-w-5xl flex-grow">
+
+        <!-- START SCREEN -->
+        <div id="start-screen" class="flex flex-col items-center justify-center text-center py-12 space-y-6">
+            <div class="relative">
+                <div class="text-7xl mb-2">⚡</div>
+                <h2 class="title-font text-4xl md:text-5xl font-black text-white drop-shadow-[0_0_20px_rgba(236,72,153,0.6)]">
+                    U-SUBSTITUTION MASTERY
+                </h2>
+                <p class="text-slate-300 text-lg max-w-xl mx-auto mt-2">
+                    Master integration techniques through drag-and-drop step assembly!
+                </p>
+            </div>
+
+            <div class="bg-slate-900/90 border border-purple-500/30 p-6 rounded-xl max-w-2xl text-left space-y-3 shadow-2xl">
+                <h3 class="title-font text-pink-400 text-lg font-bold border-b border-purple-800 pb-2">📜 Exam Guidelines:</h3>
+                <ul class="list-disc list-inside text-slate-300 space-y-2 text-sm md:text-base">
+                    <li><strong class="text-sky-400">Questions 1–2:</strong> Algebraic Integrals (5 steps, 5 Marks each).</li>
+                    <li><strong class="text-sky-400">Questions 3–4:</strong> Exponential & Logarithmic Integrals (5 steps, 5 Marks each).</li>
+                    <li><strong class="text-sky-400">Questions 5–6:</strong> Definite Integrals with bounds (7 steps, 5 Marks each).</li>
+                    <li>For Definite Integrals, you must manually calculate and enter the <span class="text-yellow-400">new upper/lower u-limits</span> and the <span class="text-yellow-400">final evaluated result</span>.</li>
+                </ul>
+            </div>
+
+            <button id="start-btn" class="cyber-btn px-10 py-4 rounded-xl text-xl mt-4">
+                ENTER THE INTEGRATION ARENA
             </button>
         </div>
 
-    </div>
+        <!-- GAMEPLAY AREA -->
+        <div id="game-screen" class="hidden space-y-6">
 
-    <!-- Screens -->
-    <div id="start-screen" class="overlay">
-        <h1 class="text-6xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600 drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]">
-            Integration Mastery
-        </h1>
-        <p class="text-xl mb-2 text-slate-300">Hand-Tracking Edition</p>
-        <div class="bg-slate-800 p-6 rounded-lg border border-slate-600 mt-6 max-w-2xl text-center">
-            <h3 class="text-2xl text-yellow-400 mb-4 font-bold">🎮 How to Play</h3>
-            <ul class="text-lg space-y-3 text-center text-slate-200">
-                <li>Show your hand to the camera.</li>
-                <li>Hold up <strong>1, 2, 3, or 4 fingers</strong> to select an answer.</li>
-                <li>Hold the pose for <strong>1 second</strong> to confirm your shot!</li>
-            </ul>
+            <!-- Question Card -->
+            <div class="bg-slate-900/90 border-2 border-purple-500/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-pink-600 text-xs font-bold px-3 py-1 rounded-bl-lg tracking-wider uppercase" id="q-type-badge">
+                    Indefinite Integral
+                </div>
+
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1" id="q-number-title">Question 1</h3>
+                <div id="question-text" class="text-2xl md:text-3xl text-center py-4 text-yellow-300 overflow-x-auto"></div>
+
+                <!-- Limits Input Box for Q5 & Q6 -->
+                <div id="limits-input-container" class="hidden mt-4 border-t border-slate-700/80 pt-4 bg-slate-800/40 p-4 rounded-xl space-y-3">
+                    <p class="text-sm font-bold text-purple-300 uppercase tracking-wider">⚡ Step 1: Limit Transformation & Evaluation Requirements</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">New Lower Limit ($u_{a}$):</label>
+                            <input type="text" id="input-lower-limit" class="math-input w-full" placeholder="e.g. 1">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">New Upper Limit ($u_{b}$):</label>
+                            <input type="text" id="input-upper-limit" class="math-input w-full" placeholder="e.g. 4">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Final Exact Value:</label>
+                            <input type="text" id="input-final-value" class="math-input w-full" placeholder="e.g. 7/3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drag and Drop Workspace Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Left Column: Empty Steps (Target Slots) -->
+                <div class="lg:col-span-7 space-y-3">
+                    <h4 class="title-font text-sm font-bold text-sky-400 uppercase tracking-wider flex items-center justify-between">
+                        <span>🎯 Drop Correct Solution Steps Here</span>
+                        <span class="text-xs text-slate-400 font-normal">Order Matters</span>
+                    </h4>
+                    
+                    <div id="steps-target-container" class="space-y-3">
+                        <!-- Dynamic Drop Zones Rendered Here -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Step Options Bank -->
+                <div class="lg:col-span-5 space-y-3">
+                    <h4 class="title-font text-sm font-bold text-pink-400 uppercase tracking-wider">
+                        📦 Step Options Bank
+                    </h4>
+                    <div id="options-bank" class="bg-slate-900/80 border border-slate-700 p-4 rounded-xl space-y-3 min-h-[300px]">
+                        <!-- Dynamic Options Draggables Rendered Here -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Control & Feedback Panel -->
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-800">
+                <div id="feedback-message" class="text-base font-bold min-h-[24px]"></div>
+                <button id="submit-step-btn" class="cyber-btn px-8 py-3 rounded-lg text-lg w-full md:w-auto">
+                    SUBMIT ANSWER & AUTO-MARK
+                </button>
+            </div>
+
         </div>
-        
-        <p id="loading-msg" class="text-yellow-400 font-bold mt-6 text-xl">Loading AI Vision Model... Please wait.</p>
-        <button id="start-btn" class="btn mt-4 hidden">START GAME</button>
-    </div>
 
-    <div id="end-screen" class="overlay hidden">
-        <h1 class="text-6xl font-bold mb-4 text-green-400">Quiz Complete</h1>
-        <h2 class="text-4xl mb-6 text-white">Final Score: <span id="final-score" class="text-yellow-400">0/10</span></h2>
-        
-        <div id="performance-msg" class="text-2xl mb-8 text-slate-300"></div>
+        <!-- END SUMMARY SCREEN -->
+        <div id="end-screen" class="hidden flex flex-col items-center justify-center text-center py-12 space-y-6">
+            <div class="text-7xl">🏆</div>
+            <h2 class="title-font text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-400">
+                MISSION ACCOMPLISHED!
+            </h2>
 
-        <button id="restart-btn" class="btn">PLAY AGAIN</button>
-    </div>
+            <div class="bg-slate-900/90 border-2 border-purple-500/50 p-8 rounded-2xl max-w-lg w-full space-y-4 shadow-2xl">
+                <h3 class="text-xl text-slate-300 font-bold">Final Exam Result</h3>
+                <div class="text-6xl font-black text-yellow-400 my-2" id="final-score-display">
+                    0 / 30
+                </div>
+                <div id="final-eval-text" class="text-lg text-sky-300 font-semibold"></div>
+            </div>
+
+            <button id="restart-btn" class="cyber-btn px-10 py-4 rounded-xl text-xl mt-4">
+                RESTART QUIZ
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="p-4 text-center text-xs text-slate-500 border-t border-slate-800/80">
+        Integration Mastery Game • Anime Edition • Powered by KaTeX Math Engine
+    </footer>
 
     <script>
-        // --- Game State ---
-        let currentLevel = 1;
-        const maxLevel = 10;
-        let score = 0;
-        let currentQuestion = null;
-        let isProcessingShot = false;
+        // --- GAME STATE ---
+        let currentQuestionIdx = 0;
+        let totalScore = 0;
+        let questionsData = [];
+        let userAssignedSteps = {}; // slotIndex -> cardId
+        let activeOptions = [];
 
-        // --- Hand Tracking State ---
-        let model = null;
-        let video = document.getElementById('webcam');
-        let currentTargetIndex = -1;
-        let holdStartTime = 0;
-        const HOLD_DURATION_MS = 800; // 0.8 seconds to trigger
+        // --- MATH HELPERS & GENERATORS ---
+        const rInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const rNonZero = (min, max) => { let v = 0; while (v === 0) v = rInt(min, max); return v; };
 
-        // --- Initialize AI ---
-        async function initAI() {
-            try {
-                // Request camera access
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-                
-                // Wait for video to be ready
-                await new Promise((resolve) => {
-                    video.onloadedmetadata = () => { resolve(); };
-                });
-
-                // Load Handpose
-                model = await handpose.load();
-                
-                document.getElementById('loading-msg').classList.add('hidden');
-                document.getElementById('start-btn').classList.remove('hidden');
-                
-                // Start detection loop
-                detectHand();
-            } catch (err) {
-                document.getElementById('loading-msg').innerText = "Camera Access Denied or Error loading AI. Please allow camera access and refresh.";
-                document.getElementById('loading-msg').classList.remove('text-yellow-400');
-                document.getElementById('loading-msg').classList.add('text-red-500');
-                console.error(err);
-            }
-        }
-
-        async function detectHand() {
-            if (model && video.readyState >= 2 && !isProcessingShot && document.getElementById('game-container').classList.contains('hidden') === false) {
-                const predictions = await model.estimateHands(video);
-                
-                if (predictions.length > 0) {
-                    const hand = predictions[0];
-                    const fingers = countFingers(hand.landmarks);
-                    
-                    document.getElementById('detection-status').innerText = `Detected: ${fingers} fingers`;
-                    document.getElementById('detection-status').classList.replace('text-sky-400', 'text-green-400');
-                    
-                    handleFingerSelection(fingers);
-                } else {
-                    document.getElementById('detection-status').innerText = "Searching for hand...";
-                    document.getElementById('detection-status').classList.replace('text-green-400', 'text-sky-400');
-                    handleFingerSelection(0); // Reset
-                }
-            }
-            requestAnimationFrame(detectHand);
-        }
-
-        function countFingers(landmarks) {
-            let count = 0;
-            // landmarks array mapping:
-            // 0: wrist
-            // 1-4: thumb (ignore for our 1-4 count to increase reliability)
-            // 5-8: index finger
-            // 9-12: middle finger
-            // 13-16: ring finger
-            // 17-20: pinky finger
-
-            // Logic: A finger is "up" if its tip (y-coordinate) is significantly higher (lower value in pixels) 
-            // than its lower joint (pip/mcp).
-            
-            // Index
-            if (landmarks[8][1] < landmarks[6][1] - 15) count++;
-            // Middle
-            if (landmarks[12][1] < landmarks[10][1] - 15) count++;
-            // Ring
-            if (landmarks[16][1] < landmarks[14][1] - 15) count++;
-            // Pinky
-            if (landmarks[20][1] < landmarks[18][1] - 15) count++;
-
-            return count;
-        }
-
-        function handleFingerSelection(fingers) {
-            // Map 1, 2, 3, 4 fingers to index 0, 1, 2, 3
-            let target = -1;
-            if (fingers >= 1 && fingers <= 4) {
-                target = fingers - 1;
-            }
-
-            // If target changed, reset timer
-            if (target !== currentTargetIndex) {
-                currentTargetIndex = target;
-                holdStartTime = Date.now();
-                
-                // Clear all UI states
-                document.querySelectorAll('.option-btn').forEach(btn => {
-                    btn.classList.remove('targeting');
-                });
-                document.querySelectorAll('.hold-progress').forEach(prog => {
-                    prog.style.width = '0%';
-                });
-
-                if (target !== -1) {
-                    document.querySelector(`.option-btn[data-index="${target}"]`).classList.add('targeting');
-                }
-            } 
-            // If target is maintained, increase progress bar
-            else if (target !== -1) {
-                const elapsed = Date.now() - holdStartTime;
-                const progress = Math.min((elapsed / HOLD_DURATION_MS) * 100, 100);
-                
-                document.getElementById(`prog-${target}`).style.width = `${progress}%`;
-
-                if (progress >= 100) {
-                    // Trigger selection!
-                    selectOption(target);
-                }
-            }
-        }
-
-
-        // --- Math Helper Engine ---
         function gcd(a, b) {
             a = Math.abs(a); b = Math.abs(b);
             while (b) { let t = b; b = a % b; a = t; }
             return Math.max(1, a);
         }
 
-        function fmtFrac(n, d) {
+        function simplifyFrac(n, d) {
             if (d < 0) { n = -n; d = -d; }
-            let g = gcd(n, d); n /= g; d /= g;
-            if (d === 1) return n === 1 ? "" : n === -1 ? "-" : n.toString();
-            if (n === 0) return "0";
-            let sign = n < 0 ? "-" : "";
-            return `${sign}\\frac{${Math.abs(n)}}{${d}}`;
+            let g = gcd(n, d);
+            return [n / g, d / g];
         }
 
-        function fmtTerm(cStr, rest) {
-            if (cStr === "0") return "0";
-            if (cStr === "" && rest !== "") return rest;
-            if (cStr === "-" && rest !== "") return "-" + rest;
-            if (cStr === "" && rest === "") return "1";
-            if (cStr === "-" && rest === "") return "-1";
-            return cStr + rest;
+        function fmtFrac(n, d) {
+            let [num, den] = simplifyFrac(n, d);
+            if (den === 1) return `${num}`;
+            if (num === 0) return "0";
+            return `\\frac{${num}}{${den}}`;
         }
 
-        const rInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const rNonZero = (min, max) => { let v = 0; while (v === 0) v = rInt(min, max); return v; };
+        // --- QUESTION GENERATOR ENGINE ---
+        function generateQuestions() {
+            const list = [];
 
-        // Type 1: Algebra Polynomial
-        function genAlgebraPoly() {
-            let a = rNonZero(-6, 6);
-            let b = rNonZero(-3, 3);
-            let c = rNonZero(-5, 5);
-            let n = rInt(2, 5);
-            
-            let qStr = `\\int ${a === 1 ? 'x' : a === -1 ? '-x' : a+'x'} (${b === 1 ? 'x^2' : b === -1 ? '-x^2' : b+'x^2'} ${c > 0 ? '+'+c : c})^${n} \\, dx`;
-            
-            let cC = fmtFrac(a, 2 * b * (n + 1));
-            let base = `(${b === 1 ? 'x^2' : b === -1 ? '-x^2' : b+'x^2'} ${c > 0 ? '+'+c : c})`;
-            let correct = fmtTerm(cC, `${base}^{${n+1}}`);
-            
-            let w1C = fmtFrac(a, 2 * (n + 1));
-            let w1 = fmtTerm(w1C, `${base}^{${n+1}}`);
-            
-            let w2C = fmtFrac(a, 2 * b);
-            let w2 = fmtTerm(w2C, `${base}^{${n}}`);
-            
-            let w3 = fmtTerm((a * 2 * b * (n+1)).toString(), `${base}^{${n+1}}`);
+            // Q1: Algebraic Polynomial/Power Rule
+            list.push(createAlgebraicPolyQuestion(false, 1));
+            // Q2: Algebraic Square Root / Reciprocal
+            list.push(createAlgebraicRootQuestion(false, 2));
+            // Q3: Natural Exponential
+            list.push(createExpQuestion(false, 3));
+            // Q4: Natural Logarithmic
+            list.push(createLogQuestion(false, 4));
+            // Q5: Definite Algebra/Root Question
+            list.push(createAlgebraicRootQuestion(true, 5));
+            // Q6: Definite Exponential/Log Question
+            list.push(createExpQuestion(true, 6));
 
-            return { q: qStr, c: correct, w1, w2, w3 };
+            return list;
         }
 
-        // Type 2: Algebra Root
-        function genAlgebraRoot() {
-            let a = rNonZero(-5, 5);
-            let b = rNonZero(-3, 3);
-            let c = rNonZero(-5, 5);
+        // --- GENERATOR: ALGEBRA POLYNOMIAL ---
+        function createAlgebraicPolyQuestion(isDefinite, qNum) {
+            let a = rNonZero(1, 4);
+            let b = rNonZero(1, 3);
+            let n = rInt(2, 3);
             
-            let num = a === 1 ? 'x' : a === -1 ? '-x' : a+'x';
-            let den = `\\sqrt{${b === 1 ? 'x^2' : b === -1 ? '-x^2' : b+'x^2'} ${c > 0 ? '+'+c : c}}`;
-            let qStr = `\\int \\frac{${num}}{${den}} \\, dx`;
+            let uExpr = `x^2 + ${b}`;
+            let duExpr = `2x \\, dx`;
+            let qTex = `\\int ${2*a}x (${uExpr})^${n} \\, dx`;
             
-            let cC = fmtFrac(a, b);
-            let correct = fmtTerm(cC, den);
-            
-            let w1C = fmtFrac(a, 2 * b);
-            let w1 = fmtTerm(w1C, den);
-            
-            let w2C = fmtFrac(a, 2 * b);
-            let w2 = fmtTerm(w2C, `\\ln|${den}|`);
-            
-            let w3C = fmtFrac(-a, b);
-            let w3 = fmtTerm(w3C, den);
+            let step1 = `\\text{Let } u = ${uExpr}`;
+            let step2 = `\\frac{du}{dx} = 2x \\implies dx = \\frac{du}{2x}`;
+            let step3 = `\\int ${2*a}x \\cdot u^${n} \\cdot \\frac{du}{2x} = ${a} \\int u^${n} \\, du`;
+            let step4 = `= ${a} \\cdot \\frac{u^{${n+1}}}{${n+1}} + C`;
+            let step5 = `= ${fmtFrac(a, n+1)} (${uExpr})^{${n+1}} + C`;
 
-            return { q: qStr, c: correct, w1, w2, w3 };
-        }
+            let steps = [step1, step2, step3, step4, step5];
 
-        // Type 3: Natural Exponential
-        function genExponential() {
-            let a = rNonZero(-4, 4);
-            let b = rNonZero(-3, 3);
-            let c = rNonZero(-3, 3);
-            
-            let pwr = `${b === 1 ? 'x^2' : b === -1 ? '-x^2' : b+'x^2'} ${c > 0 ? '+'+c : c}`;
-            let qStr = `\\int ${a === 1 ? 'x' : a === -1 ? '-x' : a+'x'} e^{${pwr}} \\, dx`;
-            
-            let cC = fmtFrac(a, 2 * b);
-            let correct = fmtTerm(cC, `e^{${pwr}}`);
-            
-            let w1C = fmtFrac(a, 2);
-            let w1 = fmtTerm(w1C, `e^{${pwr}}`);
-            
-            let w2C = fmtFrac(a, 2 * b * 2);
-            let w2 = fmtTerm(w2C, `e^{${b}x^4}`);
-            
-            let w3C = fmtFrac(a, 2 * b);
-            let w3 = fmtTerm(w3C, `x e^{${pwr}}`);
+            if (!isDefinite) {
+                return {
+                    id: qNum,
+                    isDefinite: false,
+                    title: `Question ${qNum}: Algebraic Substitution`,
+                    questionTex: qTex,
+                    steps: steps,
+                    marks: 5
+                };
+            } else {
+                let xA = 0, xB = 1;
+                let uA = xA*xA + b;
+                let uB = xB*xB + b;
+                let valA = a * Math.pow(uA, n+1) / (n+1);
+                let valB = a * Math.pow(uB, n+1) / (n+1);
+                let exactFrac = simplifyFrac(a * (Math.pow(uB, n+1) - Math.pow(uA, n+1)), n+1);
+                let valStr = exactFrac[1] === 1 ? `${exactFrac[0]}` : `${exactFrac[0]}/${exactFrac[1]}`;
 
-            return { q: qStr, c: correct, w1, w2, w3 };
-        }
+                let defQTex = `\\int_{${xA}}^{${xB}} ${2*a}x (${uExpr})^${n} \\, dx`;
+                let step6 = `\\text{Change limits: } x=${xA} \\Rightarrow u=${uA}, \\; x=${xB} \\Rightarrow u=${uB}`;
+                let step7 = `= \\left[ ${fmtFrac(a, n+1)} u^{${n+1}} \\right]_{${uA}}^{${uB}} = ${valStr}`;
 
-        // Type 4: Natural Logarithm
-        function genLogarithm() {
-            let a = rNonZero(-5, 5);
-            let n = rInt(1, 3);
-            
-            let qStr = n === 1 
-                ? `\\int \\frac{${a === 1 ? '\\ln x' : a === -1 ? '-\\ln x' : a+'\\ln x'}}{x} \\, dx`
-                : `\\int \\frac{${a === 1 ? '' : a === -1 ? '-' : a}(\\ln x)^${n}}{x} \\, dx`;
-            
-            let cC = fmtFrac(a, n + 1);
-            let correct = fmtTerm(cC, `(\\ln x)^{${n+1}}`);
-            
-            let w1C = fmtFrac(a, n);
-            let w1 = fmtTerm(w1C, `(\\ln x)^{${n}}`);
-            if (n===1) w1 = fmtTerm(a.toString(), `\\ln x`);
-
-            let w2 = fmtTerm(a.toString(), `\\ln(\\ln x)`);
-            let w3 = fmtTerm((a * (n+1)).toString(), `(\\ln x)^{${n+1}}`);
-
-            return { q: qStr, c: correct, w1, w2, w3 };
-        }
-
-        // Type 5: Exp denominator
-        function genExpDenom() {
-            let a = rNonZero(-4, 4);
-            let b = rNonZero(1, 4);
-            let c = rNonZero(-5, 5);
-            
-            let num = a === 1 ? 'e^x' : a === -1 ? '-e^x' : a+'e^x';
-            let den = `${b === 1 ? 'e^x' : b+'e^x'} ${c > 0 ? '+'+c : c}`;
-            let qStr = `\\int \\frac{${num}}{${den}} \\, dx`;
-            
-            let cC = fmtFrac(a, b);
-            let correct = fmtTerm(cC, `\\ln|${den}|`);
-            
-            let w1C = a.toString();
-            let w1 = fmtTerm(w1C, `\\ln|${den}|`);
-            if(b === 1) w1 = fmtTerm(a.toString(), `\\frac{1}{${den}}`);
-            
-            let w2C = fmtFrac(-a, b);
-            let w2 = fmtTerm(w2C, `\\frac{1}{(${den})^2}`);
-            
-            let w3 = fmtTerm(cC, `x \\ln|${c > 0 ? c : -c}|`);
-
-            return { q: qStr, c: correct, w1, w2, w3 };
-        }
-
-        function generateProblemForLevel(lvl) {
-            let prob;
-            if (lvl <= 2) prob = genAlgebraPoly();
-            else if (lvl <= 4) prob = genExponential();
-            else if (lvl <= 6) prob = genLogarithm();
-            else if (lvl <= 8) prob = Math.random() > 0.5 ? genAlgebraRoot() : genExpDenom();
-            else {
-                const rnd = Math.random();
-                if(rnd < 0.3) prob = genAlgebraRoot();
-                else if(rnd < 0.6) prob = genExpDenom();
-                else prob = genAlgebraPoly();
+                return {
+                    id: qNum,
+                    isDefinite: true,
+                    title: `Question ${qNum}: Definite Algebraic Integration`,
+                    questionTex: defQTex,
+                    steps: [...steps.slice(0,4), step6, step7, `= ${valStr}`],
+                    lowerLimit: `${uA}`,
+                    upperLimit: `${uB}`,
+                    finalValue: valStr,
+                    marks: 5
+                };
             }
+        }
 
-            let opts = [prob.c + " + C", prob.w1 + " + C", prob.w2 + " + C", prob.w3 + " + C"];
-            opts = [...new Set(opts)];
-            while(opts.length < 4) {
-                 opts.push(fmtTerm(rNonZero(-5,5).toString(), "x^" + rInt(2,4)) + " + C");
-                 opts = [...new Set(opts)];
-            }
+        // --- GENERATOR: ALGEBRAIC ROOT ---
+        function createAlgebraicRootQuestion(isDefinite, qNum) {
+            let k = rInt(1, 4);
+            let uExpr = `x^2 + ${k}`;
+            let qTex = `\\int \\frac{2x}{\\sqrt{${uExpr}}} \\, dx`;
 
-            for (let i = opts.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [opts[i], opts[j]] = [opts[j], opts[i]];
+            let step1 = `\\text{Let } u = ${uExpr}`;
+            let step2 = `du = 2x \\, dx \\implies dx = \\frac{du}{2x}`;
+            let step3 = `\\int \\frac{2x}{\\sqrt{u}} \\cdot \\frac{du}{2x} = \\int u^{-1/2} \\, du`;
+            let step4 = `= \\frac{u^{1/2}}{1/2} + C = 2\\sqrt{u} + C`;
+            let step5 = `= 2\\sqrt{${uExpr}} + C`;
+
+            let steps = [step1, step2, step3, step4, step5];
+
+            if (!isDefinite) {
+                return {
+                    id: qNum,
+                    isDefinite: false,
+                    title: `Question ${qNum}: Root & Reciprocal Substitution`,
+                    questionTex: qTex,
+                    steps: steps,
+                    marks: 5
+                };
+            } else {
+                let xA = 0, xB = 2;
+                let uA = xA*xA + k;
+                let uB = xB*xB + k;
+                let finalVal = (2 * Math.sqrt(uB) - 2 * Math.sqrt(uA)).toFixed(2);
+
+                let defQTex = `\\int_{${xA}}^{${xB}} \\frac{2x}{\\sqrt{${uExpr}}} \\, dx`;
+                let step6 = `\\text{Limits: } u(${xA}) = ${uA}, \\; u(${xB}) = ${uB}`;
+                let step7 = `= \\left[ 2\\sqrt{u} \\right]_{${uA}}^{${uB}} = 2\\sqrt{${uB}} - 2\\sqrt{${uA}}`;
+
+                return {
+                    id: qNum,
+                    isDefinite: true,
+                    title: `Question ${qNum}: Definite Root Substitution`,
+                    questionTex: defQTex,
+                    steps: [...steps.slice(0,4), step6, step7, `= ${finalVal}`],
+                    lowerLimit: `${uA}`,
+                    upperLimit: `${uB}`,
+                    finalValue: `${finalVal}`,
+                    marks: 5
+                };
             }
+        }
+
+        // --- GENERATOR: EXPONENTIAL ---
+        function createExpQuestion(isDefinite, qNum) {
+            let a = rInt(2, 4);
+            let uExpr = `x^${a}`;
+            let qTex = `\\int x^{${a-1}} e^{${uExpr}} \\, dx`;
+
+            let step1 = `\\text{Let } u = ${uExpr}`;
+            let step2 = `du = ${a}x^{${a-1}} \\, dx \\implies x^{${a-1}} dx = \\frac{du}{${a}}`;
+            let step3 = `\\int e^u \\cdot \\frac{du}{${a}} = \\frac{1}{${a}} \\int e^u \\, du`;
+            let step4 = `= \\frac{1}{${a}} e^u + C`;
+            let step5 = `= \\frac{1}{${a}} e^{${uExpr}} + C`;
+
+            let steps = [step1, step2, step3, step4, step5];
+
+            if (!isDefinite) {
+                return {
+                    id: qNum,
+                    isDefinite: false,
+                    title: `Question ${qNum}: Exponential Substitution`,
+                    questionTex: qTex,
+                    steps: steps,
+                    marks: 5
+                };
+            } else {
+                let xA = 0, xB = 1;
+                let uA = Math.pow(xA, a);
+                let uB = Math.pow(xB, a);
+                let valStr = `(e-1)/${a}`;
+
+                let defQTex = `\\int_{${xA}}^{${xB}} x^{${a-1}} e^{${uExpr}} \\, dx`;
+                let step6 = `\\text{Transform Bounds: } x=${xA} \\Rightarrow u=${uA}, \\; x=${xB} \\Rightarrow u=${uB}`;
+                let step7 = `= \\left[ \\frac{1}{${a}} e^u \\right]_{${uA}}^{${uB}} = \\frac{e - 1}{${a}}`;
+
+                return {
+                    id: qNum,
+                    isDefinite: true,
+                    title: `Question ${qNum}: Definite Exponential Integral`,
+                    questionTex: defQTex,
+                    steps: [...steps.slice(0,4), step6, step7, `= ${valStr}`],
+                    lowerLimit: `${uA}`,
+                    upperLimit: `${uB}`,
+                    finalValue: valStr,
+                    marks: 5
+                };
+            }
+        }
+
+        // --- GENERATOR: LOGARITHMIC ---
+        function createLogQuestion(isDefinite, qNum) {
+            let n = rInt(2, 3);
+            let qTex = `\\int \\frac{(\\ln x)^${n}}{x} \\, dx`;
+
+            let step1 = `\\text{Let } u = \\ln x`;
+            let step2 = `du = \\frac{1}{x} \\, dx \\implies dx = x \\, du`;
+            let step3 = `\\int \\frac{u^${n}}{x} \\cdot (x \\, du) = \\int u^${n} \\, du`;
+            let step4 = `= \\frac{u^{${n+1}}}{${n+1}} + C`;
+            let step5 = `= \\frac{(\\ln x)^{${n+1}}}{${n+1}} + C`;
+
+            let steps = [step1, step2, step3, step4, step5];
 
             return {
-                question: prob.q,
-                options: opts.slice(0,4),
-                correctIndex: opts.indexOf(prob.c + " + C") !== -1 ? opts.indexOf(prob.c + " + C") : 0
+                id: qNum,
+                isDefinite: false,
+                title: `Question ${qNum}: Natural Logarithm Substitution`,
+                questionTex: qTex,
+                steps: steps,
+                marks: 5
             };
         }
 
-        function playSound(type) {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                
-                if (type === 'hit') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(400, ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
-                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-                    osc.start();
-                    osc.stop(ctx.currentTime + 0.3);
-                } else {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(150, ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.3);
-                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-                    osc.start();
-                    osc.stop(ctx.currentTime + 0.4);
-                }
-            } catch(e) {}
-        }
-
-        // Programmatic selection (from hand tracking or click)
-        function selectOption(index) {
-            if (isProcessingShot) return;
-            isProcessingShot = true;
-            currentTargetIndex = -1; // reset tracking
-
-            const allBtns = document.querySelectorAll('.option-btn');
-            const btn = document.querySelector(`.option-btn[data-index="${index}"]`);
-            
-            allBtns.forEach(b => {
-                b.disabled = true;
-                b.classList.remove('targeting');
-            });
-
-            if (index === currentQuestion.correctIndex) {
-                btn.classList.add('hit-correct');
-                score++;
-                playSound('hit');
-            } else {
-                btn.classList.add('hit-wrong');
-                document.querySelector(`.option-btn[data-index="${currentQuestion.correctIndex}"]`).classList.add('hit-correct');
-                playSound('miss');
+        // --- DISTRACTOR GENERATOR ---
+        function makeDistractor(correctStepTex, stepIdx) {
+            if (correctStepTex.includes("Let u =")) {
+                return correctStepTex.replace("x^2", "x").replace("x^3", "x^2") + " + 1";
             }
-            
-            updateHUD();
+            if (correctStepTex.includes("du")) {
+                return correctStepTex.replace("dx =", "du =").replace("\\frac{du}", "du \\cdot");
+            }
+            if (correctStepTex.includes("\\int")) {
+                return correctStepTex.replace("du", "dx").replace("u^", "x^");
+            }
+            if (correctStepTex.includes("+ C")) {
+                return correctStepTex.replace("+ C", "").replace("\\frac", "");
+            }
+            return `\\text{Incorrect step: } ` + correctStepTex.replace("=", "\\neq");
+        }
 
-            setTimeout(() => {
-                allBtns.forEach(b => {
-                    b.classList.remove('hit-correct', 'hit-wrong');
-                    b.disabled = false;
-                });
-                
-                // reset progress bars
-                document.querySelectorAll('.hold-progress').forEach(prog => {
-                    prog.style.width = '0%';
-                });
-                
-                currentLevel++;
-                if (currentLevel > maxLevel) {
-                    endGame();
-                } else {
-                    loadLevel();
+        // --- RENDER CURRENT QUESTION ---
+        function loadQuestion(index) {
+            userAssignedSteps = {};
+            const q = questionsData[index];
+
+            document.getElementById('stage-num').innerText = index + 1;
+            document.getElementById('q-number-title').innerText = q.title;
+            document.getElementById('q-type-badge').innerText = q.isDefinite ? "Definite Integral (7 Steps)" : "Indefinite Integral (5 Steps)";
+            document.getElementById('feedback-message').innerText = "";
+            document.getElementById('feedback-message').className = "text-base font-bold min-h-[24px]";
+
+            // Render Math Title
+            katex.render(q.questionTex, document.getElementById('question-text'), { displayMode: true });
+
+            // Show/Hide Definite Limits Box
+            const limitsBox = document.getElementById('limits-input-container');
+            if (q.isDefinite) {
+                limitsBox.classList.remove('hidden');
+                document.getElementById('input-lower-limit').value = "";
+                document.getElementById('input-upper-limit').value = "";
+                document.getElementById('input-final-value').value = "";
+            } else {
+                limitsBox.classList.add('hidden');
+            }
+
+            // Build Target Step Drop Zones
+            const targetContainer = document.getElementById('steps-target-container');
+            targetContainer.innerHTML = "";
+
+            const totalSteps = q.steps.length;
+            for (let i = 0; i < totalSteps; i++) {
+                const zone = document.createElement('div');
+                zone.className = "drop-zone flex items-center justify-between p-3 cursor-pointer";
+                zone.dataset.stepIndex = i;
+
+                zone.innerHTML = `
+                    <span class="text-xs font-bold text-slate-500 mr-2 uppercase">Step ${i+1}</span>
+                    <div class="drop-content flex-grow flex items-center justify-center text-slate-400 italic text-sm">
+                        Drop Step ${i+1} Card Here
+                    </div>
+                `;
+
+                // Add Drag & Drop Listeners
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+
+                targetContainer.appendChild(zone);
+            }
+
+            // Build Options Bank (3 options per step)
+            activeOptions = [];
+            q.steps.forEach((correctTex, sIdx) => {
+                // Correct option
+                activeOptions.push({ id: `c-${sIdx}`, tex: correctTex, isCorrect: true, stepIdx: sIdx });
+                // Distractor 1
+                activeOptions.push({ id: `d1-${sIdx}`, tex: makeDistractor(correctTex, sIdx), isCorrect: false, stepIdx: sIdx });
+                // Distractor 2
+                activeOptions.push({ id: `d2-${sIdx}`, tex: correctTex.replace("+", "-") + " ", isCorrect: false, stepIdx: sIdx });
+            });
+
+            // Shuffle Options
+            activeOptions.sort(() => Math.random() - 0.5);
+
+            renderOptionsBank();
+        }
+
+        function renderOptionsBank() {
+            const bank = document.getElementById('options-bank');
+            bank.innerHTML = "";
+
+            activeOptions.forEach(opt => {
+                // Skip if assigned to a slot
+                if (Object.values(userAssignedSteps).includes(opt.id)) return;
+
+                const card = document.createElement('div');
+                card.className = "draggable-card text-sm text-center select-none";
+                card.draggable = true;
+                card.id = opt.id;
+
+                katex.render(opt.tex, card, { displayMode: false });
+
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+
+                bank.appendChild(card);
+            });
+        }
+
+        // --- DRAG AND DROP HANDLERS ---
+        let draggedCardId = null;
+
+        function handleDragStart(e) {
+            draggedCardId = this.id;
+            this.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', this.id);
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave() {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            const slotIndex = this.dataset.stepIndex;
+            const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
+
+            if (cardId) {
+                userAssignedSteps[slotIndex] = cardId;
+                updateDropZoneUI(slotIndex, cardId);
+                renderOptionsBank();
+            }
+        }
+
+        function updateDropZoneUI(slotIndex, cardId) {
+            const zone = document.querySelector(`.drop-zone[data-step-index="${slotIndex}"]`);
+            const optObj = activeOptions.find(o => o.id === cardId);
+
+            zone.classList.add('filled');
+            const contentDiv = zone.querySelector('.drop-content');
+            contentDiv.innerHTML = "";
+            contentDiv.className = "drop-content flex-grow flex items-center justify-center text-yellow-300 font-semibold";
+
+            katex.render(optObj.tex, contentDiv, { displayMode: false });
+
+            // Allow clicking on filled zone to clear
+            zone.onclick = () => {
+                delete userAssignedSteps[slotIndex];
+                zone.classList.remove('filled');
+                contentDiv.className = "drop-content flex-grow flex items-center justify-center text-slate-400 italic text-sm";
+                contentDiv.innerHTML = `Drop Step ${parseInt(slotIndex)+1} Card Here`;
+                zone.onclick = null;
+                renderOptionsBank();
+            };
+        }
+
+        // --- AUTO MARKING & FEEDBACK ENGINE ---
+        function submitAndMark() {
+            const q = questionsData[currentQuestionIdx];
+            const feedbackEl = document.getElementById('feedback-message');
+            let mark = 0;
+            let totalSteps = q.steps.length;
+
+            // 1. Check Drag & Drop Steps
+            let correctStepsCount = 0;
+            for (let i = 0; i < totalSteps; i++) {
+                const assignedCardId = userAssignedSteps[i];
+                if (assignedCardId) {
+                    const optObj = activeOptions.find(o => o.id === assignedCardId);
+                    if (optObj && optObj.isCorrect && optObj.stepIdx === i) {
+                        correctStepsCount++;
+                    }
                 }
-            }, 1500);
+            }
+
+            // Award portion of 5 marks based on step accuracy
+            let stepScore = (correctStepsCount / totalSteps) * (q.isDefinite ? 3 : 5);
+
+            // 2. Check Input Fields if Definite Integral
+            let inputScore = 0;
+            if (q.isDefinite) {
+                const userLower = document.getElementById('input-lower-limit').value.trim();
+                const userUpper = document.getElementById('input-upper-limit').value.trim();
+                const userFinal = document.getElementById('input-final-value').value.trim();
+
+                let boundsCorrect = (userLower === q.lowerLimit && userUpper === q.upperLimit);
+                let valCorrect = (userFinal === q.finalValue);
+
+                if (boundsCorrect) inputScore += 1;
+                if (valCorrect) inputScore += 1;
+            }
+
+            mark = Math.round(stepScore + inputScore);
+            totalScore += mark;
+            document.getElementById('current-score').innerText = totalScore;
+
+            // Detailed Feedback Output
+            if (mark === 5) {
+                feedbackEl.className = "text-base font-bold text-green-400";
+                feedbackEl.innerText = `✨ Excellent! All steps and calculations are correct! (+5 Marks)`;
+            } else if (mark >= 3) {
+                feedbackEl.className = "text-base font-bold text-yellow-400";
+                feedbackEl.innerText = `👍 Good attempt! You scored ${mark}/5 marks. Review step ordering!`;
+            } else {
+                feedbackEl.className = "text-base font-bold text-pink-500";
+                feedbackEl.innerText = `❌ Incorrect steps found. You scored ${mark}/5 marks.`;
+            }
+
+            // Advance to next stage after short pause
+            setTimeout(() => {
+                currentQuestionIdx++;
+                if (currentQuestionIdx < questionsData.length) {
+                    loadQuestion(currentQuestionIdx);
+                } else {
+                    finishGame();
+                }
+            }, 2000);
         }
 
-        // Also allow clicking for fallback
-        function handleOptionClick(event) {
-            const index = parseInt(event.currentTarget.getAttribute('data-index'));
-            selectOption(index);
-        }
-
-        function updateHUD() {
-            document.getElementById('level-display').innerText = `Level: ${Math.min(currentLevel, maxLevel)}/10`;
-            document.getElementById('score-display').innerText = `Score: ${score}`;
-        }
-
-        function loadLevel() {
-            isProcessingShot = false;
-            currentTargetIndex = -1;
-            
-            currentQuestion = generateProblemForLevel(currentLevel);
-            
-            // Render Math
-            katex.render(currentQuestion.question, document.getElementById('question-text'), {
-                displayMode: true,
-                throwOnError: false
-            });
-            
-            const targets = document.querySelectorAll('.option-btn .math-opt');
-            currentQuestion.options.forEach((opt, idx) => {
-                katex.render(opt, targets[idx], {
-                    displayMode: false,
-                    throwOnError: false
-                });
-            });
-            
-            updateHUD();
-        }
-
+        // --- GAME FLOW CONTROL ---
         function startGame() {
+            questionsData = generateQuestions();
+            currentQuestionIdx = 0;
+            totalScore = 0;
+            document.getElementById('current-score').innerText = totalScore;
+
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('end-screen').classList.add('hidden');
-            document.getElementById('game-container').classList.remove('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
             document.getElementById('hud').classList.remove('hidden');
-            document.getElementById('cam-container').classList.remove('hidden');
-            
-            currentLevel = 1;
-            score = 0;
-            loadLevel();
-            
-            // Restart detection loop in case it stopped
-            requestAnimationFrame(detectHand);
+
+            loadQuestion(0);
         }
 
-        function endGame() {
-            document.getElementById('game-container').classList.add('hidden');
+        function finishGame() {
+            document.getElementById('game-screen').classList.add('hidden');
             document.getElementById('hud').classList.add('hidden');
-            document.getElementById('cam-container').classList.add('hidden');
-            
-            const endScreen = document.getElementById('end-screen');
-            endScreen.classList.remove('hidden');
-            
-            document.getElementById('final-score').innerText = `${score}/10`;
-            
-            const msgEl = document.getElementById('performance-msg');
-            if (score === 10) msgEl.innerText = "Perfect! You are an Integration Master!";
-            else if (score >= 7) msgEl.innerText = "Great job! Your substitution skills are sharp.";
-            else if (score >= 4) msgEl.innerText = "Good effort. Keep practicing your u-substitutions!";
-            else msgEl.innerText = "Calculus is tough! Review your derivatives and try again.";
+            document.getElementById('end-screen').classList.remove('hidden');
+
+            document.getElementById('final-score-display').innerText = `${totalScore} / 30`;
+
+            const evalText = document.getElementById('final-eval-text');
+            if (totalScore >= 25) {
+                evalText.innerText = "🌟 S-Class Integration Master! Outstanding Work!";
+            } else if (totalScore >= 18) {
+                evalText.innerText = "⚔️ A-Class Mathematician! Solid substitution skills.";
+            } else {
+                evalText.innerText = "📖 Keep training! Review u-substitution rules and try again!";
+            }
         }
 
-        // --- Event Listeners ---
+        // --- EVENT LISTENERS ---
         document.getElementById('start-btn').addEventListener('click', startGame);
         document.getElementById('restart-btn').addEventListener('click', startGame);
-        
-        document.querySelectorAll('.option-btn').forEach(btn => {
-            btn.addEventListener('click', handleOptionClick);
-        });
-
-        // Initialize AI on page load
-        initAI();
+        document.getElementById('submit-step-btn').addEventListener('click', submitAndMark);
 
     </script>
 </body>
